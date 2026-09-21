@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acceso a clientes — UTP360</title>
+<meta name="description" content="Ingresa tu código de acceso para entrar a tu herramienta UTP360.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C231C;
+    --olive:#6E7C3D;
+    --olive-dark:#57642F;
+    --sun:#F2B93B;
+    --coral:#E86A50;
+    --sky:#3F63C9;
+    --lila:#7C5A9E;
+    --paper:#F7F5EF;
+    --paper-2:#EFEDE2;
+    --text:#1C231C;
+    --text-muted:#5B6357;
+    --card-bg:#FFFFFF;
+    --border: rgba(28,35,26,0.13);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink:#F2F1EA; --paper:#14170F; --paper-2:#1B1F15; --text:#F2F1EA;
+      --text-muted:#AAB2A0; --card-bg:#1E2318; --border: rgba(242,241,234,0.12);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#F2F1EA; --paper:#14170F; --paper-2:#1B1F15; --text:#F2F1EA;
+    --text-muted:#AAB2A0; --card-bg:#1E2318; --border: rgba(242,241,234,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--text);
+    font-family:'Inter', system-ui, sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;
+  }
+  h1,h2{font-family:'Montserrat';letter-spacing:-0.01em;margin:0;}
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:560px;margin:0 auto;padding:0 24px;}
+
+  header{padding:22px 0;border-bottom:1px solid var(--border);}
+  .header-row{max-width:1160px;margin:0 auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;}
+  .logo-badge{display:inline-flex;align-items:center;background:#F7F5EF;padding:9px 17px;border-radius:12px;}
+  .logo-img{height:31px;width:auto;display:block;}
+  .back-link{font-size:14.5px;font-weight:600;color:var(--text-muted);}
+  .back-link:hover{color:var(--text);}
+
+  main{padding:64px 0 90px;}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--olive-dark);
+    background:color-mix(in srgb, var(--olive) 16%, transparent);padding:6px 14px;border-radius:100px;margin-bottom:20px;
+  }
+  .eyebrow svg{width:15px;height:15px;}
+  h1{font-size:clamp(26px,4vw,32px);font-weight:800;}
+  .lead{margin-top:12px;color:var(--text-muted);font-size:16px;max-width:44ch;}
+
+  .card{
+    background:var(--card-bg);border:1px solid var(--border);border-radius:18px;
+    padding:30px;margin-top:32px;box-shadow:0 10px 30px -16px rgba(28,35,26,0.24);
+  }
+  .field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:8px;color:var(--text-muted);}
+  .field input{
+    width:100%;padding:13px 15px;border-radius:10px;border:1px solid var(--border);
+    background:var(--paper);color:var(--text);font-family:'Inter';font-size:16px;letter-spacing:0.01em;
+  }
+  .field input:focus{outline:2px solid var(--olive);outline-offset:1px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    padding:13px 22px;border-radius:100px;font-weight:700;font-size:15.5px;margin-top:18px;
+    border:1px solid transparent;cursor:pointer;background:var(--ink);color:var(--paper);
+    transition:background .15s, transform .15s;font-family:'Inter';
+  }
+  .btn:hover{background:var(--olive-dark);}
+  .btn:active{transform:scale(0.98);}
+  .btn:disabled{opacity:0.6;cursor:default;}
+  .btn[hidden]{display:none;}
+
+  .help-note{margin-top:18px;font-size:13.5px;color:var(--text-muted);text-align:center;}
+  .help-note a{font-weight:600;color:var(--olive-dark);border-bottom:1px solid currentColor;}
+
+  #resultBox{display:none;margin-top:32px;}
+  #resultBox.show{display:block;}
+
+  .result-card{
+    background:var(--card-bg);border:1px solid var(--border);border-radius:18px;padding:30px;
+    box-shadow:0 10px 30px -16px rgba(28,35,26,0.24);
+  }
+  .result-card.error{border-color:color-mix(in srgb, var(--coral) 45%, var(--border));}
+  .p-tag{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.03em;padding:6px 13px;border-radius:8px;color:#fff;margin-bottom:16px;}
+  .result-greet{font-size:20px;font-weight:800;font-family:'Montserrat';}
+  .result-sub{margin-top:6px;color:var(--text-muted);font-size:15px;}
+  .days-badge{
+    display:inline-flex;align-items:center;gap:7px;margin-top:18px;font-weight:700;font-size:14px;
+    padding:8px 15px;border-radius:100px;
+  }
+  .days-badge.ok{background:color-mix(in srgb, var(--olive) 18%, transparent);color:var(--olive-dark);}
+  .days-badge.warn{background:color-mix(in srgb, var(--sun) 30%, transparent);color:#8a6a12;}
+  .days-badge.bad{background:color-mix(in srgb, var(--coral) 20%, transparent);color:#a83f26;}
+  .date-row{display:flex;gap:28px;margin-top:20px;flex-wrap:wrap;}
+  .date-row div{display:flex;flex-direction:column;gap:3px;}
+  .date-row span{font-size:12px;color:var(--text-muted);font-weight:600;}
+  .date-row strong{font-size:14.5px;font-weight:700;}
+  .open-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    padding:14px 22px;border-radius:100px;font-weight:700;font-size:15.5px;margin-top:24px;
+    background:var(--ink);color:var(--paper);transition:background .15s;
+  }
+  .open-btn:hover{background:var(--olive-dark);}
+  .error-title{font-size:18px;font-weight:800;font-family:'Montserrat';color:#a83f26;}
+  .error-desc{margin-top:8px;color:var(--text-muted);font-size:15px;}
+  .spinner{
+    width:20px;height:20px;border-radius:50%;border:2.5px solid rgba(247,245,239,0.35);
+    border-top-color:var(--paper);animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){ .spinner{animation:none;} }
+
+  footer{padding:36px 0;border-top:1px solid var(--border);text-align:center;}
+  .foot-copy{font-size:13px;color:var(--text-muted);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <a href="index.html" class="logo-badge">
+      <img class="logo-img" src="logo.png" alt="UTP360">
+    </a>
+    <a href="index.html" class="back-link">← Volver al inicio</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <span class="eyebrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      Acceso a clientes
+    </span>
+    <h1>Ingresa tu código de acceso</h1>
+    <p class="lead">Es el código que te enviamos por correo al comprar tu herramienta UTP360.</p>
+
+    <div class="card">
+      <form id="accessForm">
+        <div class="field">
+          <label for="codigo">Código de acceso</label>
+          <input id="codigo" name="codigo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ej: planificador-nombreapellido" required>
+        </div>
+        <button type="submit" class="btn" id="submitBtn">
+          <span id="btnLabel">Ingresar</span>
+        </button>
+      </form>
+      <p class="help-note">¿No tienes tu código o compraste una herramienta y aún no te llega? <a href="mailto:contacto@utp360.cl">Escríbenos a contacto@utp360.cl</a></p>
+    </div>
+
+    <div id="resultBox"></div>
+  </div>
+</main>
+
+<footer>
+  <p class="foot-copy">© <span id="year"></span> UTP360 — Soluciones para la gestión pedagógica.</p>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  /* ======================================================================
+     Reemplaza esta URL por la de tu Web App de Google Apps Script,
+     una vez desplegada (ver instrucciones entregadas junto a este archivo).
+     Debe terminar en /exec
+  ====================================================================== */
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6NhYIB6ZWgR76ny3UMIMvYVAgAbCMb1tQX43V5TIg1Y_875PigS2tLav9yI4AseI/exec';
+
+  const form = document.getElementById('accessForm');
+  const input = document.getElementById('codigo');
+  const submitBtn = document.getElementById('submitBtn');
+  const btnLabel = document.getElementById('btnLabel');
+  const resultBox = document.getElementById('resultBox');
+
+  const PRODUCT_COLORS = {
+    'planificador': '#F2B93B',
+    'comprensión lectora': '#3F63C9',
+    'comprension lectora': '#3F63C9',
+    'aula check': '#6E7C3D',
+    'evalúa': '#E86A50',
+    'evalua': '#E86A50',
+    'integración': '#7C5A9E',
+    'integracion': '#7C5A9E'
+  };
+
+  function tagColor(producto){
+    const key = (producto || '').trim().toLowerCase();
+    return PRODUCT_COLORS[key] || '#6E7C3D';
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderLoading(){
+    resultBox.className = 'show';
+    resultBox.innerHTML = `
+      <div class="result-card" style="display:flex;align-items:center;gap:12px;">
+        <div class="spinner" style="border-color:rgba(28,35,26,0.15);border-top-color:var(--olive);"></div>
+        <span style="font-weight:600;color:var(--text-muted);">Verificando tu código…</span>
+      </div>`;
+  }
+
+  function renderError(motivo){
+    const messages = {
+      no_encontrado: {
+        title: 'Código no válido',
+        desc: 'No encontramos ese código. Revisa que esté bien escrito (sin espacios extra) o contáctanos para verificar tu compra.'
+      },
+      vencido: {
+        title: 'Tu acceso venció',
+        desc: 'El período de acceso a esta herramienta ya terminó. Escríbenos si quieres renovarlo.'
+      },
+      suspendido: {
+        title: 'Acceso suspendido',
+        desc: 'Este acceso está suspendido temporalmente. Contáctanos para resolverlo.'
+      },
+      error: {
+        title: 'No pudimos verificar tu código',
+        desc: 'Ocurrió un problema de conexión. Inténtalo nuevamente en unos segundos.'
+      }
+    };
+    const m = messages[motivo] || messages.error;
+    resultBox.className = 'show';
+    resultBox.innerHTML = `
+      <div class="result-card error">
+        <p class="error-title">${m.title}</p>
+        <p class="error-desc">${m.desc}</p>
+        <a class="help-note" style="display:block;margin-top:16px;" href="mailto:contacto@utp360.cl">
+          <span style="font-weight:600;color:var(--olive-dark);border-bottom:1px solid currentColor;">Escribir a contacto@utp360.cl</span>
+        </a>
+      </div>`;
+  }
+
+  function renderSuccess(data){
+    const dias = data.diasRestantes;
+    let badgeClass = 'ok', badgeText = `${dias} días restantes`;
+    if (dias <= 3){ badgeClass = 'bad'; }
+    else if (dias <= 7){ badgeClass = 'warn'; }
+    if (dias === 1) badgeText = '1 día restante';
+
+    resultBox.className = 'show';
+    resultBox.innerHTML = `
+      <div class="result-card">
+        <span class="p-tag" style="background:${tagColor(data.producto)};">${escapeHtml((data.producto||'').toUpperCase())}</span>
+        <p class="result-greet">Hola, ${escapeHtml(data.nombre || '')}</p>
+        <p class="result-sub">Tu acceso a esta herramienta está activo.</p>
+        <span class="days-badge ${badgeClass}">${badgeText}</span>
+        <div class="date-row">
+          <div><span>Inicio</span><strong>${escapeHtml(data.fechaInicio || '—')}</strong></div>
+          <div><span>Vence</span><strong>${escapeHtml(data.fechaFin || '—')}</strong></div>
+        </div>
+        <a class="open-btn" href="${data.enlace || '#'}" target="_blank" rel="noopener">Abrir mi herramienta</a>
+      </div>`;
+  }
+
+  async function verificarCodigo(codigo){
+    if (APPS_SCRIPT_URL === 'PEGA_AQUI_TU_URL_DE_GOOGLE_APPS_SCRIPT'){
+      resultBox.className = 'show';
+      resultBox.innerHTML = `
+        <div class="result-card error">
+          <p class="error-title">Acceso aún no configurado</p>
+          <p class="error-desc">Falta conectar esta página con la planilla de clientes. (Nota para UTP360: pega la URL de tu Web App de Apps Script en la constante APPS_SCRIPT_URL dentro de acceso.html.)</p>
+        </div>`;
+      return;
+    }
+    renderLoading();
+    submitBtn.disabled = true;
+    try {
+      const url = APPS_SCRIPT_URL + '?codigo=' + encodeURIComponent(codigo);
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.valid){
+        renderSuccess(data);
+      } else {
+        renderError(data.motivo || 'no_encontrado');
+      }
+    } catch (err) {
+      renderError('error');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const codigo = input.value.trim();
+    if (!codigo) return;
+    verificarCodigo(codigo);
+  });
+
+  // Soporta enlaces personalizados: acceso.html?c=codigo-del-cliente
+  const params = new URLSearchParams(window.location.search);
+  const codigoParam = params.get('c');
+  if (codigoParam){
+    input.value = codigoParam;
+    verificarCodigo(codigoParam);
+  }
+</script>
+
+</body>
+</html>
