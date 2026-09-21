@@ -266,6 +266,50 @@
       </div>`;
   }
 
+  // Llama al Apps Script vía JSONP (una etiqueta <script>), no vía fetch().
+  // Esto evita los bloqueos de tipo CORS que algunos navegadores aplican
+  // a las peticiones fetch hechas hacia script.google.com desde otro dominio.
+  function llamarAppsScript(codigo){
+    return new Promise((resolve, reject) => {
+      const callbackName = 'utp360cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+      const script = document.createElement('script');
+      let settled = false;
+
+      const limpiar = () => {
+        delete window[callbackName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+        clearTimeout(timer);
+      };
+
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        limpiar();
+        reject(new Error('timeout'));
+      }, 12000);
+
+      window[callbackName] = function(data){
+        if (settled) return;
+        settled = true;
+        limpiar();
+        resolve(data);
+      };
+
+      script.onerror = function(){
+        if (settled) return;
+        settled = true;
+        limpiar();
+        reject(new Error('script_error'));
+      };
+
+      const url = APPS_SCRIPT_URL
+        + '?codigo=' + encodeURIComponent(codigo)
+        + '&callback=' + encodeURIComponent(callbackName);
+      script.src = url;
+      document.body.appendChild(script);
+    });
+  }
+
   async function verificarCodigo(codigo){
     if (APPS_SCRIPT_URL === 'PEGA_AQUI_TU_URL_DE_GOOGLE_APPS_SCRIPT'){
       resultBox.className = 'show';
@@ -279,9 +323,7 @@
     renderLoading();
     submitBtn.disabled = true;
     try {
-      const url = APPS_SCRIPT_URL + '?codigo=' + encodeURIComponent(codigo);
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await llamarAppsScript(codigo);
       if (data.valid){
         renderSuccess(data);
       } else {
