@@ -116,6 +116,14 @@ td.cen,th.cen{text-align:center}
 .aviso.advertencia{background:var(--elem-bg);color:#6e4800}
 .aviso.error{background:var(--insuf-bg);color:#8d1f1f}
 .aviso ul{margin:6px 0 0;padding-left:18px;max-height:180px;overflow:auto}
+.cm .alt-max{background:#fff1a8;color:#7a5a00;font-weight:700}
+table.ord th:not(.nosort){cursor:pointer;user-select:none}
+.ord-flecha{font-size:10px;margin-left:3px;color:var(--muted)}
+.cm th.vert{height:150px;vertical-align:bottom;padding:4px 2px}
+.cm th.vert div{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;font-weight:500;margin:0 auto;max-height:150px;overflow:hidden}
+.cm td.niv{background:#f3f6fa;font-weight:600}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;margin:0}
+.chk input{width:auto}
 .leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-2);margin-top:8px}
 .leyenda span{display:inline-flex;align-items:center;gap:6px}
 .leyenda i{width:10px;height:10px;border-radius:3px;display:inline-block}
@@ -292,12 +300,29 @@ function transporte(accion, datos) {
 let pendientes = 0;
 function cargando(on) { pendientes += on ? 1 : -1; if (pendientes < 0) pendientes = 0; document.getElementById('cargando').classList.toggle('hidden', pendientes === 0); }
 
+/* Memoria de consultas (velocidad): las lecturas ya hechas se reutilizan por 5 minutos;
+   cualquier acción que modifique datos limpia la memoria completa. */
+const LECTURAS = ['catalogos', 'inicio', 'listarEvaluaciones', 'listarEstudiantes', 'obtenerMatriz', 'datosCarga',
+  'resultados', 'comparativo', 'trayectoria', 'remedial', 'listarUsuarios', 'listarPermisos', 'imagenesEvaluacion'];
+const MEMORIA = { datos: {}, ttl: 5 * 60 * 1000 };
+function limpiarMemoria() { MEMORIA.datos = {}; }
+
 function api(accion, datos, silencioso) {
+  const cacheable = LECTURAS.indexOf(accion) >= 0;
+  const clave = accion + '|' + JSON.stringify(datos || {});
+  if (cacheable) {
+    const m = MEMORIA.datos[clave];
+    if (m && Date.now() - m.t < MEMORIA.ttl) { try { return Promise.resolve(JSON.parse(m.txt)); } catch (e) {} }
+  }
   if (!silencioso) cargando(true);
   return transporte(accion, datos).then(function (txt) {
     if (!silencioso) cargando(false);
     let r; try { r = JSON.parse(txt); } catch (e) { throw new Error('Respuesta no válida del servidor.'); }
-    if (r.ok) return r.data;
+    if (r.ok) {
+      if (cacheable) MEMORIA.datos[clave] = { t: Date.now(), txt: JSON.stringify(r.data) };
+      else if (['yo', 'logout', 'login', 'loginSSO'].indexOf(accion) < 0) limpiarMemoria();
+      return r.data;
+    }
     if (r.error === 'SESION_EXPIRADA') { salirLocal('Su sesión expiró. Ingrese nuevamente.'); }
     else if (r.error === 'DEBE_CAMBIAR_CLAVE') { mostrarCambio(); }
     throw new Error(r.error);
@@ -352,7 +377,7 @@ function mostrarAcceso() {
   setTimeout(function () { (MODO_PORTAL && !$('l-codigo').value ? $('l-codigo') : $('l-usuario')).focus(); }, 50);
 }
 function mostrarCambio() { $('app').classList.add('hidden'); $('acceso').classList.remove('hidden'); $('form-login').classList.add('hidden'); $('form-cambio').classList.remove('hidden'); }
-function salirLocal(msg) { S.token = null; S.user = null; guardarSesion(null); mostrarAcceso(); if (msg) { $('login-error').textContent = msg; $('login-error').classList.remove('hidden'); } }
+function salirLocal(msg) { limpiarMemoria(); S.token = null; S.user = null; guardarSesion(null); mostrarAcceso(); if (msg) { $('login-error').textContent = msg; $('login-error').classList.remove('hidden'); } }
 
 $('btn-login').onclick = async function () {
   $('login-error').classList.add('hidden');
@@ -442,6 +467,7 @@ function cursosPara(ev) {
   if (!ev) return [];
   return S.cat.cursos.filter(function (c) {
     if (Number(c.charAt(0)) !== ev.nivel) return false;
+    if (ev.cursos && ev.cursos.length && ev.cursos.indexOf(c) < 0) return false;
     if (S.user.rol !== 'docente') return true;
     return S.user.asignaciones.some(function (a) { return a.curso === c && (a.asignatura === '*' || a.asignatura === ev.asignatura); });
   });
@@ -680,7 +706,7 @@ async function vEvaluaciones(p) {
     const t = $('fe-tipo').value, a = $('fe-asig').value, n = $('fe-nivel').value;
     const f = lista.filter(function (e) { return (!t || e.tipo === t) && (!a || e.asignatura === a) && (!n || String(e.nivel) === n); });
     $('p-evals').innerHTML = f.length ? '<div class="tabla-cont"><table><thead><tr><th>Fecha</th><th>Nombre</th><th>Tipo</th><th>Asignatura</th><th class="cen">Nivel</th><th class="num">Preguntas</th><th>Matriz</th><th></th></tr></thead><tbody>' + f.map(function (e) {
-      return '<tr><td>' + fechaTxt(e.fecha) + '</td><td><b>' + esc(e.nombre) + '</b>' + (e.descripcion ? '<br><small style="color:var(--muted)">' + esc(e.descripcion) + '</small>' : '') + '</td><td>' + esc(e.tipo) + '</td><td>' + esc(e.asignatura) + '</td><td class="cen">' + e.nivel + '°</td><td class="num">' + e.numPreguntas + '</td><td>' +
+      return '<tr><td>' + fechaTxt(e.fecha) + '</td><td><b>' + esc(e.nombre) + '</b>' + (e.descripcion ? '<br><small style="color:var(--muted)">' + esc(e.descripcion) + '</small>' : '') + '</td><td>' + esc(e.tipo) + '</td><td>' + esc(e.asignatura) + '</td><td class="cen">' + e.nivel + '°' + (e.cursos && e.cursos.length ? '<br><small style="color:var(--muted)">' + esc(e.cursos.join(', ')) + '</small>' : '') + '</td><td class="num">' + e.numPreguntas + '</td><td>' +
         estadoMatrizChip(e) + (e.matrizEditadaPor ? '<br><small style="color:var(--muted)">Editada por ' + esc(e.matrizEditadaPor) + '</small>' : '') + '</td><td style="white-space:nowrap">' +
         '<button class="btn mini' + (e.puedeEditarMatriz && !e.matrizCompleta ? ' prim' : '') + '" onclick="ir(\'matriz\',{evalId:\'' + e.id + '\'})">' + (e.puedeEditarMatriz ? (e.matrizCompleta ? 'Editar matriz' : 'Cargar matriz') : 'Ver matriz') + '</button> ' +
         (esAdmin() || (e.propia && perm('crearEval')) ? '<button class="btn mini" onclick=\'editarEvaluacion(' + JSON.stringify(e).replace(/'/g, '&#39;') + ')\'>Editar</button> <button class="btn mini peligro" onclick="eliminarEvaluacion(\'' + e.id + '\')">Eliminar</button>' : '') + '</td></tr>';
@@ -697,6 +723,7 @@ function editarEvaluacion(e) {
     niveles = niveles.filter(function (n) { return a.some(function (x) { return Number(x.curso.charAt(0)) === n; }); });
   }
   e = e || { nombre: '', tipo: 'Mensual', asignatura: asigs[0], nivel: niveles[0], fecha: hoyISO(), numPreguntas: 40, descripcion: '' };
+  const uso = e.usa || { oa: true, indicador: true, habilidad: true, eje: false };
   modal(e.id ? 'Editar evaluación' : 'Nueva evaluación',
     '<div class="form"><div class="full"><label>Nombre</label><input id="ev-nombre" value="' + esc(e.nombre) + '" placeholder="Ej.: Ensayo SIMCE N°2 Lectura"></div>' +
     '<div><label>Tipo</label><select id="ev-tipo">' + S.cat.tipos.map(function (t) { return '<option' + (t === e.tipo ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></div>' +
@@ -704,12 +731,34 @@ function editarEvaluacion(e) {
     '<div><label>Nivel</label><select id="ev-nivel">' + niveles.map(function (n) { return '<option value="' + n + '"' + (n === Number(e.nivel) ? ' selected' : '') + '>' + n + '° básico</option>'; }).join('') + '</select></div>' +
     '<div><label>Fecha de aplicación</label><input id="ev-fecha" type="date" value="' + esc(e.fecha) + '"></div>' +
     '<div><label>N° de preguntas (máx. ' + S.cat.config.maxPreguntas + ')</label><input id="ev-num" type="number" min="1" max="' + S.cat.config.maxPreguntas + '" value="' + e.numPreguntas + '"></div>' +
-    '<div class="full"><label>Descripción (opcional)</label><input id="ev-desc" value="' + esc(e.descripcion) + '" placeholder="Unidad, forma, observaciones"></div></div>' +
-    '<div class="aviso" style="margin-top:14px">Se aplica a todos los cursos del nivel. Tras guardar, defina la matriz de evaluación (clave, OA, indicador y habilidad por pregunta).</div>',
+    '<div class="full"><label>Descripción (opcional)</label><input id="ev-desc" value="' + esc(e.descripcion) + '" placeholder="Unidad, forma, observaciones"></div>' +
+    '<div class="full"><label>Cursos que rinden esta evaluación</label><div id="ev-cursos" style="display:flex;gap:8px 16px;flex-wrap:wrap;padding:6px 0"></div><small style="color:var(--muted)">Por defecto se aplica a todos los cursos del nivel. Desmarque los que no la rinden (por ejemplo, para una evaluación solo del 4°B).</small></div>' +
+    '<div class="full"><label>Columnas de la matriz que usa esta evaluación</label><div style="display:flex;gap:8px 18px;flex-wrap:wrap;padding:6px 0">' +
+    '<label class="chk"><input type="checkbox" id="ev-u-oa"' + (uso.oa ? ' checked' : '') + '> OA</label>' +
+    '<label class="chk"><input type="checkbox" id="ev-u-ind"' + (uso.indicador ? ' checked' : '') + '> Indicador</label>' +
+    '<label class="chk"><input type="checkbox" id="ev-u-hab"' + (uso.habilidad ? ' checked' : '') + '> Habilidad</label>' +
+    '<label class="chk"><input type="checkbox" id="ev-u-eje"' + (uso.eje ? ' checked' : '') + '> Eje o unidad</label></div>' +
+    '<small style="color:var(--muted)">Las columnas desmarcadas no se piden en la matriz y se ocultan en resultados y remediales. La clave y el puntaje siempre se usan.</small></div></div>' +
+    '<div class="aviso" style="margin-top:14px">Tras guardar, defina la matriz de evaluación (clave y las columnas que haya marcado).</div>',
     '<button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn prim" id="ev-guardar">Guardar</button>');
+  const marcadosIniciales = (e.cursos || []).slice();
+  function pintarCursosEval() {
+    const nivel = Number($('ev-nivel').value);
+    const prev = Array.from($('ev-cursos').querySelectorAll('input')).length ? Array.from($('ev-cursos').querySelectorAll('input:checked')).map(function (i) { return i.value; }) : marcadosIniciales;
+    const lista = (S.cat.todosLosCursos || S.cat.cursos).filter(function (c) { return Number(c.charAt(0)) === nivel; });
+    const todos = !prev.length;
+    $('ev-cursos').innerHTML = lista.length ? lista.map(function (c) {
+      return '<label class="chk"><input type="checkbox" value="' + esc(c) + '"' + (todos || prev.indexOf(c) >= 0 ? ' checked' : '') + '> ' + esc(c) + '</label>';
+    }).join('') : '<span style="color:var(--muted)">Aún no hay cursos de este nivel (importe la matrícula).</span>';
+  }
+  pintarCursosEval();
+  $('ev-nivel').onchange = function () { $('ev-cursos').innerHTML = ''; marcadosIniciales.length = 0; pintarCursosEval(); };
   $('ev-guardar').onclick = async function () {
     try {
-      const r = await api('guardarEvaluacion', { id: e.id, nombre: $('ev-nombre').value, tipo: $('ev-tipo').value, asignatura: $('ev-asig').value, nivel: $('ev-nivel').value, fecha: $('ev-fecha').value, numPreguntas: $('ev-num').value, descripcion: $('ev-desc').value });
+      const cursosSel = Array.from($('ev-cursos').querySelectorAll('input:checked')).map(function (i) { return i.value; });
+      if (!cursosSel.length && $('ev-cursos').querySelector('input')) throw new Error('Marque al menos un curso.');
+      const r = await api('guardarEvaluacion', { id: e.id, nombre: $('ev-nombre').value, tipo: $('ev-tipo').value, asignatura: $('ev-asig').value, nivel: $('ev-nivel').value, fecha: $('ev-fecha').value, numPreguntas: $('ev-num').value, descripcion: $('ev-desc').value,
+        cursos: cursosSel, usa: { oa: $('ev-u-oa').checked, indicador: $('ev-u-ind').checked, habilidad: $('ev-u-hab').checked, eje: $('ev-u-eje').checked } });
       cerrarModal(); toast('Evaluación guardada.', 'ok');
       if (!e.id) ir('matriz', { evalId: r.id }); else ir('evaluaciones');
     } catch (err) { errorToast(err); }
@@ -747,20 +796,24 @@ async function vMatriz(p) {
   let h = cabecera('Matriz de evaluación', esc(ev.nombre) + ' · ' + esc(ev.tipo) + ' · ' + ev.nivel + '° básico · ' + esc(ev.asignatura) + ' · ' + ev.numPreguntas + ' preguntas',
     '<button class="btn" onclick="ir(\'evaluaciones\')">← Volver</button>' +
     (esAdmin() && completa ? (validada ? '<button class="btn" onclick="validarMatriz(\'' + ev.id + '\',false)">Desbloquear para docentes</button>' : '<button class="btn" onclick="validarMatriz(\'' + ev.id + '\',true)">Validar matriz</button>') : '') +
+    '<button class="btn" onclick="imagenesInstrumento(\'' + ev.id + '\')">Imágenes del instrumento</button>' +
     (editable ? '<button class="btn" onclick="plantillaMatriz(\'' + ev.id + '\')">Descargar plantilla</button><button class="btn" onclick="importarMatriz()">Importar desde Excel</button><button class="btn prim" onclick="guardarMatriz(\'' + ev.id + '\')">Guardar matriz</button>' : ''));
   if (S.user.rol === 'docente' && !validada && !perm('matriz')) h += '<div class="aviso error">UTP tiene bloqueada la carga de matrices para su usuario o para todos los docentes. Puede consultar la matriz en modo lectura.</div>';
   if (validada) h += '<div class="aviso" style="background:var(--adec-bg);color:#126b12"><b>Matriz validada por UTP</b> (' + esc(ev.validadoPor) + ' · ' + esc(ev.validadoEl) + ').' + (esAdmin() ? ' Los docentes ya no pueden modificarla; usted puede editarla o desbloquearla.' : ' Está bloqueada: para corregirla, solicite a UTP que la desbloquee.') + '</div>';
   else if (completa) h += '<div class="aviso advertencia"><b>Matriz completa, pendiente de validación por UTP.</b>' + (ev.matrizEditadaPor ? ' Última edición: ' + esc(ev.matrizEditadaPor) + ' · ' + esc(ev.matrizEditadaEl) + '.' : '') + (esAdmin() ? ' Revise clave, OA, indicador y habilidad de cada pregunta y presione «Validar matriz».' : ' Los resultados se informarán como preliminares hasta su validación.') + '</div>';
   h += '<div class="aviso">SM = selección múltiple (1 punto, clave A–D). AB = pregunta abierta (máximo ' + S.cat.config.maxAbiertas + ' por evaluación, puntaje máximo de 1 a 4). El OA, el indicador y la habilidad se registran tal como aparecen en su tabla de especificaciones: la plataforma no los modifica ni infiere.</div>';
-  h += '<div id="m-errores"></div><div class="panel"><div class="tabla-cont" style="max-height:66vh"><table class="matriz"><thead><tr><th>P</th><th style="width:70px">Tipo</th><th style="width:70px">Clave</th><th style="width:70px">Puntaje</th><th style="width:110px">OA</th><th>Indicador de evaluación</th><th style="width:190px">Habilidad</th><th style="width:150px">Eje / unidad</th></tr></thead><tbody>';
+  const U = ev.usa || { oa: true, indicador: true, habilidad: true, eje: false };
+  h += '<div class="aviso">Esta evaluación usa las columnas: <b>' + ['OA', 'Indicador', 'Habilidad', 'Eje / unidad'].filter(function (_, i) { return [U.oa, U.indicador, U.habilidad, U.eje][i]; }).join(', ') + '</b>' + (U.oa || U.indicador || U.habilidad || U.eje ? '' : ' (solo clave y puntaje)') + '. Puede cambiarlo en «Editar» de la lista de evaluaciones.</div>';
+  h += '<div id="m-errores"></div><div class="panel"><div class="tabla-cont" style="max-height:66vh"><table class="matriz"><thead><tr><th>P</th><th style="width:70px">Tipo</th><th style="width:70px">Clave</th><th style="width:70px">Puntaje</th>' +
+    (U.oa ? '<th style="width:110px">OA</th>' : '') + (U.indicador ? '<th>Indicador de evaluación</th>' : '') + (U.habilidad ? '<th style="width:190px">Habilidad</th>' : '') + (U.eje ? '<th style="width:150px">Eje / unidad</th>' : '') + '</tr></thead><tbody>';
   for (let i = 1; i <= ev.numPreguntas; i++) {
     const x = m[i] || { tipo: 'SM', clave: '', puntaje: 1, oa: '', indicador: '', habilidad: '', eje: '' };
     const dis = editable ? '' : ' disabled';
     h += '<tr data-p="' + i + '"><td>' + i + '</td><td><select class="m-tipo"' + dis + '><option value="SM">SM</option><option value="AB"' + (x.tipo === 'AB' ? ' selected' : '') + '>AB</option></select></td>' +
       '<td><select class="m-clave"' + dis + '><option value=""></option>' + ['A', 'B', 'C', 'D'].map(function (l) { return '<option' + (x.clave === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '</select></td>' +
       '<td><select class="m-puntaje"' + dis + '>' + [1, 2, 3, 4].map(function (n) { return '<option' + (Number(x.puntaje) === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></td>' +
-      '<td><input class="m-oa" value="' + esc(x.oa) + '" placeholder="OA 4"' + dis + '></td><td><input class="m-ind" value="' + esc(x.indicador) + '"' + dis + '></td>' +
-      '<td><input class="m-hab" list="dl-hab" value="' + esc(x.habilidad) + '"' + dis + '></td><td><input class="m-eje" value="' + esc(x.eje) + '"' + dis + '></td></tr>';
+      (U.oa ? '<td><input class="m-oa" value="' + esc(x.oa) + '" placeholder="OA 4"' + dis + '></td>' : '') + (U.indicador ? '<td><input class="m-ind" value="' + esc(x.indicador) + '"' + dis + '></td>' : '') +
+      (U.habilidad ? '<td><input class="m-hab" list="dl-hab" value="' + esc(x.habilidad) + '"' + dis + '></td>' : '') + (U.eje ? '<td><input class="m-eje" value="' + esc(x.eje) + '"' + dis + '></td>' : '') + '</tr>';
   }
   h += '</tbody></table></div><datalist id="dl-hab">' + sug.map(function (s) { return '<option value="' + esc(s) + '">'; }).join('') + '</datalist></div>';
   $('principal').innerHTML = h;
@@ -773,10 +826,11 @@ function ajustarFilaMatriz(tr) {
   tr.querySelector('.m-puntaje').disabled = !ab || !S.cache.matrizEditable;
   if (ab) tr.querySelector('.m-clave').value = ''; else tr.querySelector('.m-puntaje').value = '1';
 }
+function valorCampo(tr, sel) { const el = tr.querySelector(sel); return el ? el.value : ''; }
 function leerMatrizTabla() {
   return Array.from(document.querySelectorAll('.matriz tbody tr')).map(function (tr) {
     return { pregunta: Number(tr.dataset.p), tipo: tr.querySelector('.m-tipo').value, clave: tr.querySelector('.m-clave').value, puntaje: tr.querySelector('.m-puntaje').value,
-      oa: tr.querySelector('.m-oa').value, indicador: tr.querySelector('.m-ind').value, habilidad: tr.querySelector('.m-hab').value, eje: tr.querySelector('.m-eje').value };
+      oa: valorCampo(tr, '.m-oa'), indicador: valorCampo(tr, '.m-ind'), habilidad: valorCampo(tr, '.m-hab'), eje: valorCampo(tr, '.m-eje') };
   });
 }
 async function guardarMatriz(evalId, confirmado) {
@@ -798,14 +852,17 @@ async function validarMatriz(evalId, validar) {
 }
 async function plantillaMatriz(evalId) {
   const ev = ((await evaluaciones()) || []).find(function (e) { return e.id === evalId; }) || {};
+  const U = ev.usa || { oa: true, indicador: true, habilidad: true, eje: false };
+  const cols = [['Pregunta', 10, null], ['Tipo', 10, null], ['Clave', 9, null], ['Puntaje', 9, null]];
+  if (U.oa) cols.push(['OA', 12, 'oa']); if (U.indicador) cols.push(['Indicador', 50, 'indicador']); if (U.habilidad) cols.push(['Habilidad', 24, 'habilidad']); if (U.eje) cols.push(['Eje', 22, 'eje']);
   const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Matriz');
-  ws.columns = [{ width: 10 }, { width: 10 }, { width: 9 }, { width: 9 }, { width: 12 }, { width: 50 }, { width: 24 }, { width: 22 }];
-  const ini = encabezadoInstitucional(ws, 'Matriz de evaluación · ' + (ev.nombre || ''), ['Tipo: SM (selección múltiple) o AB (abierta). Clave: A, B, C o D (solo SM). Puntaje: 1 a 4 (solo AB). OA, indicador y habilidad según la tabla de especificaciones.'], 8);
-  filaEncabezado(ws, ini, ['Pregunta', 'Tipo', 'Clave', 'Puntaje', 'OA', 'Indicador', 'Habilidad', 'Eje']);
+  ws.columns = cols.map(function (c) { return { width: c[1] }; });
+  const ini = encabezadoInstitucional(ws, 'Matriz de evaluación · ' + (ev.nombre || ''), ['Tipo: SM (selección múltiple) o AB (abierta). Clave: A, B, C o D (solo SM). Puntaje: 1 a 4 (solo AB). Las demás columnas dependen de lo que use esta evaluación.'], cols.length);
+  filaEncabezado(ws, ini, cols.map(function (c) { return c[0]; }));
   const actual = leerMatrizTabla();
   for (let i = 0; i < (ev.numPreguntas || actual.length); i++) {
     const x = actual[i] || {};
-    filaDatos(ws, ini + 1 + i, [i + 1, x.tipo || 'SM', x.clave || '', x.tipo === 'AB' ? Number(x.puntaje) : '', x.oa || '', x.indicador || '', x.habilidad || '', x.eje || '']);
+    filaDatos(ws, ini + 1 + i, [i + 1, x.tipo || 'SM', x.clave || '', x.tipo === 'AB' ? Number(x.puntaje) : ''].concat(cols.slice(4).map(function (c) { return x[c[2]] || ''; })));
     ws.getCell(ini + 1 + i, 2).dataValidation = { type: 'list', allowBlank: false, formulae: ['"SM,AB"'] };
     ws.getCell(ini + 1 + i, 3).dataValidation = { type: 'list', allowBlank: true, formulae: ['"A,B,C,D"'] };
     ws.getCell(ini + 1 + i, 4).dataValidation = { type: 'list', allowBlank: true, formulae: ['"1,2,3,4"'] };
@@ -828,10 +885,10 @@ async function importarMatriz() {
       tr.querySelector('.m-tipo').value = tipo; ajustarFilaMatriz(tr);
       if (tipo === 'SM' && c.k >= 0) tr.querySelector('.m-clave').value = String(r[c.k]).trim().toUpperCase();
       if (tipo === 'AB' && c.pt >= 0 && r[c.pt]) tr.querySelector('.m-puntaje').value = String(parseInt(r[c.pt], 10));
-      if (c.oa >= 0) tr.querySelector('.m-oa').value = String(r[c.oa]).trim();
-      if (c.ind >= 0) tr.querySelector('.m-ind').value = String(r[c.ind]).trim();
-      if (c.hab >= 0) tr.querySelector('.m-hab').value = String(r[c.hab]).trim();
-      if (c.eje >= 0) tr.querySelector('.m-eje').value = String(r[c.eje]).trim();
+      if (c.oa >= 0 && tr.querySelector('.m-oa')) tr.querySelector('.m-oa').value = String(r[c.oa]).trim();
+      if (c.ind >= 0 && tr.querySelector('.m-ind')) tr.querySelector('.m-ind').value = String(r[c.ind]).trim();
+      if (c.hab >= 0 && tr.querySelector('.m-hab')) tr.querySelector('.m-hab').value = String(r[c.hab]).trim();
+      if (c.eje >= 0 && tr.querySelector('.m-eje')) tr.querySelector('.m-eje').value = String(r[c.eje]).trim();
       n++;
     });
     toast(n + ' preguntas importadas. Revise y presione "Guardar matriz".', 'ok');
@@ -980,7 +1037,8 @@ async function cargarResultados() {
     S.cache.res = R;
     if (!R.resumen.rendidas) { cont.innerHTML = '<div class="panel vacio">Aún no hay respuestas cargadas para ' + (curso === '*' ? 'este nivel' : curso) + '.</div>'; return; }
     $('r-xls').disabled = false; $('r-xls').onclick = function () { exportarResultados(R).catch(errorToast); };
-    cont.innerHTML = '<div class="pestanas" id="r-tabs">' + [['resumen', 'Resumen'], ['maestro', 'Cuadro maestro'], ['preguntas', 'Por pregunta'], ['oa', 'Por OA'], ['habilidad', 'Por habilidad'], ['indicador', 'Por indicador'], ['estudiantes', 'Estudiantes']]
+    const U = R.usa || { oa: true, indicador: true, habilidad: true, eje: false };
+    cont.innerHTML = '<div class="pestanas" id="r-tabs">' + [['resumen', 'Resumen'], ['maestro', 'Cuadro maestro'], ['preguntas', 'Por pregunta'], U.oa ? ['oa', 'Por OA'] : null, U.habilidad ? ['habilidad', 'Por habilidad'] : null, U.indicador ? ['indicador', 'Por indicador'] : null, U.eje ? ['eje', 'Por eje'] : null, ['estudiantes', 'Estudiantes'], ['apoderado', 'Informe apoderado']].filter(Boolean)
       .map(function (t, i) { return '<button data-t="' + t[0] + '"' + (i === 0 ? ' class="activo"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div><div id="r-tab"></div>';
     $('r-tabs').querySelectorAll('button').forEach(function (b) {
       b.onclick = function () { $('r-tabs').querySelectorAll('button').forEach(function (x) { x.classList.toggle('activo', x === b); }); pintarTab(b.dataset.t); };
@@ -989,7 +1047,7 @@ async function cargarResultados() {
   } catch (e) { cont.innerHTML = '<div class="aviso error">' + esc(e.message) + '</div>'; }
 }
 function pintarTab(t) {
-  const R = S.cache.res, c = R.config, rs = R.resumen, cont = $('r-tab');
+  const R = S.cache.res, c = R.config, rs = R.resumen, cont = $('r-tab'), U = R.usa || { oa: true, indicador: true, habilidad: true, eje: false };
   destruirGraficos();
   const titulo = (R.evaluacion.estadoMatriz !== 'Validada' ? '<div class="aviso advertencia"><b>Resultados preliminares:</b> la matriz de esta evaluación aún no ha sido validada por UTP.</div>' : '') + '<p style="margin:0 0 12px;color:var(--text-2)"><b>' + esc(R.evaluacion.nombre) + '</b> · ' + esc(R.evaluacion.tipo) + ' · ' + esc(R.evaluacion.asignatura) + ' · ' + R.cursos.join(', ') + ' · Exigencia ' + c.exigencia + ' % · Niveles: Insuficiente &lt; ' + c.limiteElemental + ' % ≤ Elemental &lt; ' + c.limiteAdecuado + ' % ≤ Adecuado</p>';
   if (t === 'resumen') {
@@ -1004,7 +1062,7 @@ function pintarTab(t) {
       '<div class="tabla-cont" style="margin-top:10px"><table><thead><tr><th>Nivel</th><th class="num">Estudiantes</th><th class="num">%</th></tr></thead><tbody>' + NIVELES.map(function (n) { return '<tr><td>' + chip(n) + '</td><td class="num">' + rs.niveles[n] + '</td><td class="num">' + pct(rs.rendidas ? rs.niveles[n] / rs.rendidas * 100 : 0) + '</td></tr>'; }).join('') + '</tbody></table></div></div>' +
       '<div class="panel"><h3>Distribución de notas</h3><div class="lienzo"><canvas id="g-notas"></canvas></div></div></div>';
     h += '<div class="panel"><h3>Porcentaje de logro por pregunta</h3><div class="sub">Las barras rojas están bajo el ' + c.umbralRemedial + ' % y requieren remedial.</div><div class="lienzo" style="height:300px"><canvas id="g-preg"></canvas></div><div class="leyenda"><span><i style="background:var(--serie)"></i>Logro ≥ ' + c.umbralRemedial + ' %</span><span><i style="background:var(--insuf)"></i>Logro &lt; ' + c.umbralRemedial + ' % (remedial)</span></div></div>';
-    h += '<div class="rejilla"><div class="panel"><h3>Logro por OA</h3>' + tablaDimension(R.porOA, 'OA', c, true) + '</div><div class="panel"><h3>Logro por habilidad</h3>' + tablaDimension(R.porHabilidad, 'Habilidad', c, true) + '</div></div>';
+    if (U.oa || U.habilidad) h += '<div class="rejilla">' + (U.oa ? '<div class="panel"><h3>Logro por OA</h3>' + tablaDimension(R.porOA, 'OA', c, true) + '</div>' : '') + (U.habilidad ? '<div class="panel"><h3>Logro por habilidad</h3>' + tablaDimension(R.porHabilidad, 'Habilidad', c, true) + '</div>' : '') + '</div>';
     cont.innerHTML = h;
     graficoNiveles('g-niveles', rs.niveles);
     const rend = R.estudiantes.filter(function (e) { return e.estado === 'Rendida'; });
@@ -1015,61 +1073,188 @@ function pintarTab(t) {
     graficoPreguntas('g-preg', R.preguntas, c.umbralRemedial);
   } else if (t === 'maestro') {
     const ev = R.matriz;
-    let h = titulo + '<div class="panel"><div class="leyenda" style="margin:0 0 10px"><span><i style="background:#e5f6e5"></i>Correcta</span><span><i style="background:#fbe9e9"></i>Incorrecta (se muestra la alternativa marcada)</span><span><i style="background:#f3f4f6"></i>Omitida</span><span><i style="background:#fff4dc"></i>Abierta con puntaje parcial</span></div><div class="tabla-cont" style="max-height:66vh"><table class="cm"><thead><tr><th class="nom">Estudiante</th>' + (R.cursos.length > 1 ? '<th>Curso</th>' : '') +
-      ev.map(function (m) { return '<th title="' + esc(m.oa + ' · ' + m.habilidad + ' · ' + m.indicador) + '">P' + m.pregunta + '<br><small style="font-weight:500">' + (m.tipo === 'AB' ? 'AB/' + m.puntaje : m.clave) + '</small></th>'; }).join('') +
+    const clsCel = function (m, d) { return m.tipo === 'AB' ? (d.om ? 'om' : (d.ok === 1 ? 'ok' : (d.ok === 0.5 ? 'par' : 'mal'))) : (d.om ? 'om' : (d.ok ? 'ok' : 'mal')); };
+    const txtCel = function (m, d) { return m.tipo === 'AB' ? (d.om ? '–' : d.p) : (d.om ? '–' : (d.ok ? '✓' : esc(d.r))); };
+    const valCel = function (m, d) { return d.om ? -1 : (m.tipo === 'AB' ? d.p : (d.ok ? 1 : 0)); };
+    const leyenda = '<div class="leyenda" style="margin:0 0 10px"><span><i style="background:#e5f6e5"></i>Correcta</span><span><i style="background:#fbe9e9"></i>Incorrecta (se muestra la alternativa marcada)</span><span><i style="background:#f3f4f6"></i>Omitida</span><span><i style="background:#fff4dc"></i>Abierta con puntaje parcial</span></div>';
+    let h = titulo + '<div class="panel"><h3>1. Cuadro maestro por estudiante</h3><div class="sub">Haga clic en un encabezado para ordenar de menor a mayor o de mayor a menor (por ejemplo, por % de logro, nota, nivel o por una pregunta).</div>' + leyenda + '<div class="tabla-cont" style="max-height:66vh"><table class="cm ord"><thead><tr><th class="nom">Estudiante</th>' + (R.cursos.length > 1 ? '<th>Curso</th>' : '') +
+      ev.map(function (m) { return '<th title="' + esc([U.oa ? m.oa : '', U.habilidad ? m.habilidad : '', U.indicador ? m.indicador : ''].filter(Boolean).join(' · ')) + '">P' + m.pregunta + '<br><small style="font-weight:500">' + (m.tipo === 'AB' ? 'AB/' + m.puntaje : m.clave) + '</small></th>'; }).join('') +
       '<th>B</th><th>M</th><th>O</th><th>Pts.</th><th>%</th><th>Nota</th><th>Nivel</th></tr></thead><tbody>';
     R.estudiantes.forEach(function (e) {
-      h += '<tr><td class="nom">' + esc(e.nombre) + (e.pie === 'SI' ? '<span class="marca-pie">PIE</span>' : '') + '</td>' + (R.cursos.length > 1 ? '<td>' + e.curso + '</td>' : '');
+      h += '<tr' + (e.estado !== 'Rendida' ? ' class="fijo"' : '') + '><td class="nom">' + esc(e.nombre) + (e.pie === 'SI' ? '<span class="marca-pie">PIE</span>' : '') + '</td>' + (R.cursos.length > 1 ? '<td>' + e.curso + '</td>' : '');
       if (e.estado !== 'Rendida') { h += '<td colspan="' + (ev.length + 7) + '" style="text-align:left;color:var(--muted)">' + e.estado + (e.motivo ? ' · ' + esc(e.motivo) : '') + '</td></tr>'; return; }
-      e.det.forEach(function (d, k) {
-        const m = ev[k];
-        if (m.tipo === 'AB') h += '<td class="' + (d.om ? 'om' : (d.ok === 1 ? 'ok' : (d.ok === 0.5 ? 'par' : 'mal'))) + '">' + (d.om ? '–' : d.p) + '</td>';
-        else h += '<td class="' + (d.om ? 'om' : (d.ok ? 'ok' : 'mal')) + '">' + (d.om ? '–' : (d.ok ? '✓' : esc(d.r))) + '</td>';
-      });
-      h += '<td>' + e.buenas + '</td><td>' + e.malas + '</td><td>' + e.omitidas + '</td><td>' + num(e.puntaje, 0) + '/' + e.maximo + '</td><td>' + num(e.pct) + '</td><td><b style="color:' + (e.nota < c.notaAprob ? '#a12626' : 'inherit') + '">' + notaTxt(e.nota) + '</b></td><td>' + chip(e.nivel) + '</td></tr>';
+      e.det.forEach(function (d, k) { h += '<td class="' + clsCel(ev[k], d) + '" data-v="' + valCel(ev[k], d) + '">' + txtCel(ev[k], d) + '</td>'; });
+      h += '<td>' + e.buenas + '</td><td>' + e.malas + '</td><td>' + e.omitidas + '</td><td data-v="' + e.puntaje + '">' + num(e.puntaje, 0) + '/' + e.maximo + '</td><td>' + num(e.pct) + '</td><td><b style="color:' + (e.nota < c.notaAprob ? '#a12626' : 'inherit') + '">' + notaTxt(e.nota) + '</b></td><td data-v="' + ordNivel(e.nivel) + '">' + chip(e.nivel) + '</td></tr>';
     });
-    h += '<tr style="background:#f3f6fa;font-weight:600"><td class="nom" style="background:#f3f6fa">% de logro</td>' + (R.cursos.length > 1 ? '<td></td>' : '') + R.preguntas.map(function (q) { return '<td style="color:' + (q.remedial ? '#a12626' : 'inherit') + '">' + num(q.pct, 0) + '</td>'; }).join('') + '<td colspan="7"></td></tr>';
+    h += '<tr class="fijo" style="background:#f3f6fa;font-weight:600"><td class="nom" style="background:#f3f6fa">% de logro</td>' + (R.cursos.length > 1 ? '<td></td>' : '') + R.preguntas.map(function (q) { return '<td style="color:' + (q.remedial ? '#a12626' : 'inherit') + '">' + num(q.pct, 0) + '</td>'; }).join('') + '<td colspan="7"></td></tr>';
+    h += '</tbody></table></div></div>';
+
+    // Cuadro 2: preguntas en filas, estudiantes en columnas
+    const rend = R.estudiantes.filter(function (e) { return e.estado === 'Rendida'; });
+    h += '<div class="panel"><h3>2. Cuadro por pregunta (filas) y estudiante (columnas)</h3><div class="sub">Cada fila es una pregunta. Se muestra la alternativa marcada por cada estudiante (verde = correcta, rojo = incorrecta, gris = omitida). Por defecto aparece ordenado de menor a mayor % de logro; haga clic en cualquier encabezado para cambiar el orden.</div>' + leyenda +
+      '<div class="tabla-cont" style="max-height:70vh"><table class="cm ord" id="t-pxe"><thead><tr><th>P</th><th>Clave</th>' + (U.oa ? '<th>OA</th>' : '') + (U.habilidad ? '<th>Habilidad</th>' : '') + '<th>% Logro</th><th>% Logro nivel en el colegio</th>' +
+      rend.map(function (e) { return '<th class="nosort vert" title="' + esc(e.nombre) + '"><div>' + esc(e.nombre) + '</div></th>'; }).join('') + '</tr></thead><tbody>';
+    ev.forEach(function (m, k) {
+      const q = R.preguntas[k];
+      h += '<tr><td><b>P' + m.pregunta + '</b></td><td>' + (m.tipo === 'AB' ? 'AB/' + m.puntaje : m.clave) + '</td>' + (U.oa ? '<td>' + esc(m.oa) + '</td>' : '') + (U.habilidad ? '<td style="text-align:left">' + esc(m.habilidad) + '</td>' : '') +
+        '<td data-v="' + q.pct + '" style="font-weight:700;color:' + (q.remedial ? '#a12626' : 'inherit') + '">' + num(q.pct) + '</td><td class="niv" data-p="' + m.pregunta + '" data-v="">…</td>' +
+        rend.map(function (e) { const d = e.det[k]; return '<td class="' + clsCel(m, d) + '" data-v="">' + (m.tipo === 'AB' ? txtCel(m, d) : (d.om ? '–' : esc(d.ok ? m.clave : d.r))) + '</td>'; }).join('') + '</tr>';
+    });
     h += '</tbody></table></div></div>';
     cont.innerHTML = h;
+    cont.querySelectorAll('table.ord').forEach(function (t) { hacerOrdenable(t); });
+    const t2 = $('t-pxe'), thLogro = t2.querySelectorAll('thead th')[2 + (U.oa ? 1 : 0) + (U.habilidad ? 1 : 0)];
+    ordenarTabla(t2, thLogro.cellIndex, 'asc');
+    const evalId = $('r-eval').value;
+    datosNivel(R, evalId).then(function (RN) {
+      const mapa = {}; RN.preguntas.forEach(function (q) { mapa[q.pregunta] = q.pct; });
+      t2.querySelectorAll('td.niv').forEach(function (td) { const v = mapa[td.dataset.p]; td.textContent = v === undefined ? '—' : num(v); td.dataset.v = v === undefined ? '' : v; });
+    }).catch(function () { t2.querySelectorAll('td.niv').forEach(function (td) { td.textContent = '—'; }); });
   } else if (t === 'preguntas') {
-    let h = titulo + '<div class="panel"><div class="sub" style="margin:0 0 10px">Distribución de respuestas por alternativa. La clave aparece destacada; el distractor es la alternativa incorrecta más elegida.</div><div class="tabla-cont" style="max-height:66vh"><table><thead><tr><th>P</th><th>Tipo</th><th>Clave</th><th>OA</th><th>Habilidad</th><th>Indicador</th><th class="num">A</th><th class="num">B</th><th class="num">C</th><th class="num">D</th><th class="num">Omit.</th><th>Distractor</th><th style="min-width:150px">Logro</th><th>Nivel</th></tr></thead><tbody>';
+    let h = titulo + '<div class="panel"><div class="sub" style="margin:0 0 6px">Distribución de respuestas por alternativa. Haga clic en un encabezado para ordenar. Se pinta de <b style="background:#cdeccd;padding:0 5px">verde</b> la alternativa correcta cuando es la más elegida y de <b style="background:#fff1a8;padding:0 5px">amarillo</b> la alternativa <u>incorrecta</u> cuando es la más elegida (distractor dominante). La clave siempre se marca con borde verde.</div><div class="tabla-cont" style="max-height:66vh"><table class="ord"><thead><tr><th>P</th><th>Tipo</th><th>Clave</th>' + (U.oa ? '<th>OA</th>' : '') + (U.habilidad ? '<th>Habilidad</th>' : '') + (U.indicador ? '<th>Indicador</th>' : '') + '<th class="num">A</th><th class="num">B</th><th class="num">C</th><th class="num">D</th><th class="num">Omit.</th><th>Distractor</th><th style="min-width:150px">Logro</th><th>Nivel</th></tr></thead><tbody>';
     R.preguntas.forEach(function (q) {
-      const celda = function (l) { const v = q.distribucion[l] || 0, pc = q.n ? Math.round(v / q.n * 100) : 0; return '<td class="num"' + (l === q.clave ? ' style="background:#e5f6e5;font-weight:700"' : '') + '>' + v + '<br><small style="color:var(--muted)">' + pc + ' %</small></td>'; };
-      h += '<tr><td><b>P' + q.pregunta + '</b></td><td>' + q.tipo + '</td><td>' + (q.tipo === 'SM' ? q.clave : 'máx. ' + q.puntaje) + '</td><td>' + esc(q.oa) + '</td><td>' + esc(q.habilidad) + '</td><td style="min-width:200px">' + esc(q.indicador) + '</td>' +
-        (q.tipo === 'SM' ? celda('A') + celda('B') + celda('C') + celda('D') + '<td class="num">' + q.distribucion.Omitida + '</td><td>' + (q.distractor ? q.distractor + ' (' + num(q.distractorPct) + ' %)' : '—') + '</td>'
+      let maxL = null, maxV = 0;
+      ['A', 'B', 'C', 'D'].forEach(function (l) { const v = q.distribucion[l] || 0; if (v > maxV) { maxV = v; maxL = l; } });
+      const celda = function (l) {
+        const v = q.distribucion[l] || 0, pc = q.n ? Math.round(v / q.n * 100) : 0;
+        let st = '';
+        if (l === maxL) st = l === q.clave ? 'background:#cdeccd;font-weight:700' : 'background:#fff1a8;font-weight:700;color:#7a5a00';
+        if (l === q.clave) st += ';box-shadow:inset 0 0 0 2px #0ca30c';
+        return '<td class="num" data-v="' + pc + '" style="' + st + '">' + v + '<br><small style="color:var(--muted);white-space:nowrap">' + pc + ' %</small></td>';
+      };
+      h += '<tr><td data-v="' + q.pregunta + '"><b>P' + q.pregunta + '</b></td><td>' + q.tipo + '</td><td>' + (q.tipo === 'SM' ? q.clave : 'máx. ' + q.puntaje) + '</td>' + (U.oa ? '<td>' + esc(q.oa) + '</td>' : '') + (U.habilidad ? '<td>' + esc(q.habilidad) + '</td>' : '') + (U.indicador ? '<td style="min-width:200px">' + esc(q.indicador) + '</td>' : '') +
+        (q.tipo === 'SM' ? celda('A') + celda('B') + celda('C') + celda('D') + '<td class="num">' + q.distribucion.Omitida + '</td><td data-v="' + (q.distractorPct || 0) + '">' + (q.distractor ? q.distractor + ' (' + num(q.distractorPct) + ' %)' : '—') + '</td>'
           : '<td colspan="4" style="font-size:12px">' + Object.keys(q.distribucion).filter(function (k) { return k !== 'Omitida'; }).map(function (k) { return k + ' pts: ' + q.distribucion[k]; }).join(' · ') + '<br>Promedio: ' + num(q.promedio) + ' de ' + q.puntaje + '</td><td class="num">' + q.distribucion.Omitida + '</td><td>—</td>') +
-        '<td>' + barra(q.pct, c.umbralRemedial) + '</td><td>' + chip(q.nivel) + '</td></tr>';
+        '<td data-v="' + q.pct + '">' + barra(q.pct, c.umbralRemedial) + '</td><td data-v="' + ordNivel(q.nivel) + '">' + chip(q.nivel) + '</td></tr>';
     });
     h += '</tbody></table></div></div>';
     cont.innerHTML = h;
-  } else if (t === 'oa' || t === 'habilidad' || t === 'indicador') {
-    const datos = t === 'oa' ? R.porOA : t === 'habilidad' ? R.porHabilidad : R.porIndicador;
-    const etiqueta = t === 'oa' ? 'OA' : t === 'habilidad' ? 'Habilidad' : 'Indicador';
+    cont.querySelectorAll('table.ord').forEach(function (tb) { hacerOrdenable(tb); });
+  } else if (t === 'oa' || t === 'habilidad' || t === 'indicador' || t === 'eje') {
+    const datos = t === 'oa' ? R.porOA : t === 'habilidad' ? R.porHabilidad : t === 'eje' ? (R.porEje || []) : R.porIndicador;
+    const etiqueta = t === 'oa' ? 'OA' : t === 'habilidad' ? 'Habilidad' : t === 'eje' ? 'Eje' : 'Indicador';
     let h = titulo + '<div class="panel"><h3>Logro por ' + etiqueta.toLowerCase() + '</h3><div class="sub">Cuantitativo: % del puntaje obtenido en las preguntas asociadas. Cualitativo: nivel de desempeño y distribución de estudiantes por nivel en ese ' + etiqueta.toLowerCase() + '.</div><div class="lienzo" style="height:' + Math.max(200, datos.length * 38 + 60) + 'px"><canvas id="g-dim"></canvas></div><div class="leyenda"><span><i style="background:var(--serie)"></i>Logro ≥ ' + c.umbralRemedial + ' %</span><span><i style="background:var(--insuf)"></i>Logro &lt; ' + c.umbralRemedial + ' % (remedial)</span></div></div>';
-    h += '<div class="panel">' + tablaDimension(datos, etiqueta, c, false) + '</div>';
+    h += '<div class="panel"><div class="sub" style="margin:0 0 8px">Haga clic en un encabezado (nombre, logro, nivel, estudiantes por nivel) para ordenar de menor a mayor o de mayor a menor.</div>' + tablaDimension(datos, etiqueta, c, false) + '</div>';
     cont.innerHTML = h;
+    cont.querySelectorAll('table.ord').forEach(function (tb) { hacerOrdenable(tb); });
     S.graficos.push(new Chart($('g-dim'), { type: 'bar', data: { labels: datos.map(function (g) { return recortar(g.nombre, 48); }), datasets: [{ label: '% de logro', data: datos.map(function (g) { return g.pct; }), backgroundColor: datos.map(function (g) { return g.remedial ? '#d03b3b' : '#2a78d6'; }), borderRadius: 4, maxBarThickness: 24 }] },
       options: opcionesBase({ x: { min: 0, max: 100, ticks: { callback: function (v) { return v + ' %'; } } } }, true, function (ctx) { return ' ' + num(ctx.parsed.x) + ' %'; }) }));
   } else if (t === 'estudiantes') {
-    let h = titulo + '<div class="panel"><div class="filtros" style="margin-bottom:10px"><div><label>Buscar</label><input placeholder="Nombre o RUT" oninput="filtrarTabla(\'t-res-est\',this.value)"></div></div><div class="tabla-cont" style="max-height:66vh"><table id="t-res-est"><thead><tr><th class="num">N°</th><th>RUT</th><th>Nombre</th>' + (R.cursos.length > 1 ? '<th>Curso</th>' : '') + '<th class="num">Buenas</th><th class="num">Malas</th><th class="num">Omitidas</th><th class="num">Pts. abiertas</th><th class="num">Puntaje</th><th class="num">%</th><th class="num">Nota</th><th>Nivel</th>' +
-      R.porOA.map(function (g) { return '<th class="num" title="Logro en ' + esc(g.nombre) + '">' + esc(recortar(g.nombre, 14)) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    let h = titulo + '<div class="panel"><div class="filtros" style="margin-bottom:10px"><div><label>Buscar</label><input placeholder="Nombre o RUT" oninput="filtrarTabla(\'t-res-est\',this.value)"></div></div><div class="tabla-cont" style="max-height:66vh"><table id="t-res-est" class="ord"><thead><tr><th class="num">N°</th><th>RUT</th><th>Nombre</th>' + (R.cursos.length > 1 ? '<th>Curso</th>' : '') + '<th class="num">Buenas</th><th class="num">Malas</th><th class="num">Omitidas</th><th class="num">Pts. abiertas</th><th class="num">Puntaje</th><th class="num">%</th><th class="num">Nota</th><th>Nivel</th>' +
+      (U.oa ? R.porOA : []).map(function (g) { return '<th class="num" title="Logro en ' + esc(g.nombre) + '">' + esc(recortar(g.nombre, 14)) + '</th>'; }).join('') + '</tr></thead><tbody>';
     R.estudiantes.forEach(function (e, i) {
-      h += '<tr><td class="num">' + (i + 1) + '</td><td>' + e.rut + '</td><td>' + esc(e.nombre) + (e.pie === 'SI' ? '<span class="marca-pie">PIE</span>' : '') + '</td>' + (R.cursos.length > 1 ? '<td>' + e.curso + '</td>' : '');
-      if (e.estado !== 'Rendida') { h += '<td colspan="' + (8 + R.porOA.length) + '" style="color:var(--muted)">' + e.estado + (e.motivo ? ' · ' + esc(e.motivo) : '') + '</td></tr>'; return; }
-      h += '<td class="num">' + e.buenas + '</td><td class="num">' + e.malas + '</td><td class="num">' + e.omitidas + '</td><td class="num">' + num(e.ptsAbiertas, 0) + '</td><td class="num">' + num(e.puntaje, 0) + ' / ' + e.maximo + '</td><td class="num">' + num(e.pct) + '</td><td class="num"><b style="color:' + (e.nota < c.notaAprob ? '#a12626' : 'inherit') + '">' + notaTxt(e.nota) + '</b></td><td>' + chip(e.nivel) + '</td>' +
-        R.porOA.map(function (g) { const v = e.oa[g.nombre]; return '<td class="num" style="' + (v !== null && v < c.umbralRemedial ? 'color:#a12626;font-weight:600' : '') + '">' + num(v, 0) + '</td>'; }).join('') + '</tr>';
+      h += '<tr' + (e.estado !== 'Rendida' ? ' class="fijo"' : '') + '><td class="num">' + (i + 1) + '</td><td>' + e.rut + '</td><td>' + esc(e.nombre) + (e.pie === 'SI' ? '<span class="marca-pie">PIE</span>' : '') + '</td>' + (R.cursos.length > 1 ? '<td>' + e.curso + '</td>' : '');
+      if (e.estado !== 'Rendida') { h += '<td colspan="' + (8 + (U.oa ? R.porOA.length : 0)) + '" style="color:var(--muted)">' + e.estado + (e.motivo ? ' · ' + esc(e.motivo) : '') + '</td></tr>'; return; }
+      h += '<td class="num">' + e.buenas + '</td><td class="num">' + e.malas + '</td><td class="num">' + e.omitidas + '</td><td class="num">' + num(e.ptsAbiertas, 0) + '</td><td class="num">' + num(e.puntaje, 0) + ' / ' + e.maximo + '</td><td class="num">' + num(e.pct) + '</td><td class="num"><b style="color:' + (e.nota < c.notaAprob ? '#a12626' : 'inherit') + '">' + notaTxt(e.nota) + '</b></td><td data-v="' + ordNivel(e.nivel) + '">' + chip(e.nivel) + '</td>' +
+        (U.oa ? R.porOA : []).map(function (g) { const v = e.oa[g.nombre]; return '<td class="num" style="' + (v !== null && v < c.umbralRemedial ? 'color:#a12626;font-weight:600' : '') + '">' + num(v, 0) + '</td>'; }).join('') + '</tr>';
     });
     h += '</tbody></table></div></div>';
     cont.innerHTML = h;
+    cont.querySelectorAll('table.ord').forEach(function (tb) { hacerOrdenable(tb); });
+  } else if (t === 'apoderado') {
+    pintarApoderado(R, titulo, cont);
   }
 }
 function recortar(s, n) { s = String(s); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 function tablaDimension(datos, etiqueta, c, compacta) {
-  return '<div class="tabla-cont"><table><thead><tr><th>' + etiqueta + '</th>' + (compacta ? '' : '<th>Preguntas</th>' + (etiqueta !== 'OA' ? '<th>OA asociados</th>' : '<th>Habilidades</th>')) + '<th style="min-width:150px">Logro</th><th>Nivel</th>' + (compacta ? '' : '<th class="num">Insuf.</th><th class="num">Elem.</th><th class="num">Adec.</th>') + '</tr></thead><tbody>' +
+  return '<div class="tabla-cont"><table class="ord"><thead><tr><th>' + etiqueta + '</th>' + (compacta ? '' : '<th>Preguntas</th>' + (etiqueta !== 'OA' ? '<th>OA asociados</th>' : '<th>Habilidades</th>')) + '<th style="min-width:150px">Logro</th><th>Nivel</th>' + (compacta ? '' : '<th class="num">Insuf.</th><th class="num">Elem.</th><th class="num">Adec.</th>') + '</tr></thead><tbody>' +
     datos.map(function (g) {
-      return '<tr><td>' + esc(g.nombre) + (g.critico ? ' <span class="chip alerta">Crítico</span>' : '') + '</td>' + (compacta ? '' : '<td>' + g.preguntas.map(function (p) { return 'P' + p; }).join(', ') + '</td><td style="font-size:12px">' + esc((etiqueta !== 'OA' ? g.oas : g.habilidades).join(' · ')) + '</td>') +
-        '<td>' + barra(g.pct, c.umbralRemedial) + '</td><td>' + chip(g.nivel) + '</td>' + (compacta ? '' : '<td class="num">' + g.niveles.Insuficiente + '</td><td class="num">' + g.niveles.Elemental + '</td><td class="num">' + g.niveles.Adecuado + '</td>') + '</tr>';
+      return '<tr><td>' + esc(g.nombre) + (g.critico ? ' <span class="chip alerta">Crítico</span>' : '') + '</td>' + (compacta ? '' : '<td data-v="' + g.preguntas.length + '">' + g.preguntas.map(function (p) { return 'P' + p; }).join(', ') + '</td><td style="font-size:12px">' + esc(((etiqueta !== 'OA' ? g.oas : g.habilidades) || []).join(' · ')) + '</td>') +
+        '<td data-v="' + g.pct + '">' + barra(g.pct, c.umbralRemedial) + '</td><td data-v="' + ordNivel(g.nivel) + '">' + chip(g.nivel) + '</td>' + (compacta ? '' : '<td class="num">' + g.niveles.Insuficiente + '</td><td class="num">' + g.niveles.Elemental + '</td><td class="num">' + g.niveles.Adecuado + '</td>') + '</tr>';
     }).join('') + '</tbody></table></div>';
+}
+
+/* ---------- Ordenar tablas (clic en el encabezado) ---------- */
+function ordNivel(n) { return n === 'Insuficiente' ? 0 : n === 'Elemental' ? 1 : n === 'Adecuado' ? 2 : -1; }
+function valorOrden(td) {
+  if (!td) return '';
+  const raw = td.dataset && td.dataset.v !== undefined && td.dataset.v !== '' ? td.dataset.v : td.textContent.trim();
+  if (raw === '' || raw === '—' || raw === '…') return null;
+  const n = parseFloat(String(raw).replace('%', '').replace(',', '.'));
+  return !isNaN(n) && /^[-\d.,\s]/.test(String(raw)) ? n : String(raw).toLowerCase();
+}
+function ordenarTabla(tabla, idx, dir) {
+  const tb = tabla.tBodies[0], filas = Array.from(tb.rows), fijas = filas.filter(function (r) { return r.classList.contains('fijo'); }), libres = filas.filter(function (r) { return !r.classList.contains('fijo'); });
+  const f = dir === 'desc' ? -1 : 1;
+  libres.sort(function (a, b) {
+    const x = valorOrden(a.cells[idx]), y = valorOrden(b.cells[idx]);
+    if (x === null && y === null) return 0; if (x === null) return 1; if (y === null) return -1;
+    if (typeof x === 'number' && typeof y === 'number') return (x - y) * f;
+    return String(x).localeCompare(String(y), 'es') * f;
+  });
+  libres.concat(fijas).forEach(function (r) { tb.appendChild(r); });
+  tabla.querySelectorAll('thead th').forEach(function (th) { const s = th.querySelector('.ord-flecha'); if (s) s.textContent = ''; });
+  const th = tabla.tHead.rows[0].cells[idx];
+  if (th) { let s = th.querySelector('.ord-flecha'); if (!s) { s = document.createElement('span'); s.className = 'ord-flecha'; th.appendChild(s); } s.textContent = dir === 'desc' ? '▼' : '▲'; th.dataset.dir = dir; }
+}
+function hacerOrdenable(tabla) {
+  Array.from(tabla.tHead.rows[0].cells).forEach(function (th, i) {
+    if (th.classList.contains('nosort')) return;
+    th.title = (th.title ? th.title + ' · ' : '') + 'Clic para ordenar';
+    th.addEventListener('click', function () { ordenarTabla(tabla, i, th.dataset.dir === 'asc' ? 'desc' : 'asc'); });
+  });
+}
+async function datosNivel(R, evalId) {
+  if (R.cursos.length > 1) return R;
+  const k = evalId + '|*';
+  if (S.cache.resNivel && S.cache.resNivel.k === k) return S.cache.resNivel.R;
+  const RN = await api('resultados', { evalId: evalId, curso: '*' });
+  S.cache.resNivel = { k: k, R: RN };
+  return RN;
+}
+
+/* ---------- Informe para el apoderado ---------- */
+function pintarApoderado(R, titulo, cont) {
+  const rend = R.estudiantes.filter(function (e) { return e.estado === 'Rendida'; });
+  let h = titulo + '<div class="panel"><h3>Informe individual para el apoderado</h3><div class="sub">Incluye nota, porcentaje de logro, nivel de desempeño, detalle de preguntas buenas y malas y un mensaje motivador. Se imprime una hoja por estudiante.</div>' +
+    '<div class="acciones" style="margin:10px 0"><button class="btn prim" id="ap-sel">Imprimir seleccionados</button><button class="btn" id="ap-todos">Imprimir todo el curso</button><label class="chk" style="margin-left:10px"><input type="checkbox" id="ap-marcar" checked> Marcar todos</label></div>' +
+    '<div class="tabla-cont" style="max-height:60vh"><table class="ord"><thead><tr><th class="nosort"></th><th>Nombre</th>' + (R.cursos.length > 1 ? '<th>Curso</th>' : '') + '<th class="num">% logro</th><th class="num">Nota</th><th>Nivel</th><th class="nosort"></th></tr></thead><tbody>';
+  R.estudiantes.forEach(function (e) {
+    const ok = e.estado === 'Rendida';
+    h += '<tr' + (ok ? '' : ' class="fijo"') + '><td>' + (ok ? '<input type="checkbox" class="ap-chk" value="' + esc(e.rut) + '" checked>' : '') + '</td><td>' + esc(e.nombre) + '</td>' + (R.cursos.length > 1 ? '<td>' + e.curso + '</td>' : '') +
+      (ok ? '<td class="num">' + num(e.pct) + '</td><td class="num">' + notaTxt(e.nota) + '</td><td data-v="' + ordNivel(e.nivel) + '">' + chip(e.nivel) + '</td><td><button class="btn mini" data-rut="' + esc(e.rut) + '">Ver / imprimir</button></td>'
+        : '<td colspan="4" style="color:var(--muted)">' + e.estado + (e.motivo ? ' · ' + esc(e.motivo) : '') + '</td>') + '</tr>';
+  });
+  h += '</tbody></table></div></div>';
+  cont.innerHTML = h;
+  cont.querySelectorAll('table.ord').forEach(function (tb) { hacerOrdenable(tb); });
+  $('ap-marcar').onchange = function () { cont.querySelectorAll('.ap-chk').forEach(function (x) { x.checked = $('ap-marcar').checked; }); };
+  $('ap-sel').onclick = function () { const r = Array.from(cont.querySelectorAll('.ap-chk:checked')).map(function (x) { return x.value; }); if (!r.length) return toast('Marque al menos un estudiante.', 'error'); imprimirApoderado(R, rend.filter(function (e) { return r.indexOf(e.rut) >= 0; })); };
+  $('ap-todos').onclick = function () { imprimirApoderado(R, rend); };
+  cont.querySelectorAll('button[data-rut]').forEach(function (b) { b.onclick = function () { imprimirApoderado(R, rend.filter(function (e) { return e.rut === b.dataset.rut; })); }; });
+}
+function mensajeMotivador(nivel) {
+  if (nivel === 'Adecuado') return '¡Felicitaciones! Su hijo(a) demuestra un dominio adecuado de los aprendizajes evaluados. Lo(a) animamos a seguir leyendo, practicando y desafiándose: su esfuerzo constante se refleja en estos resultados.';
+  if (nivel === 'Elemental') return 'Su hijo(a) va avanzando y ya domina parte importante de los aprendizajes. Con práctica constante en los contenidos que aún están en desarrollo, logrará alcanzar el nivel Adecuado. Cuenta con el apoyo de sus profesores y de su familia.';
+  return 'Esta evaluación nos muestra en qué aprendizajes necesita más apoyo. El colegio realizará actividades de reforzamiento y, junto con el apoyo en casa (revisar tareas, leer juntos, practicar a diario), podrá mejorar. ¡Confiamos en su capacidad!';
+}
+function imprimirApoderado(R, lista) {
+  const c = R.config, ev = R.evaluacion, U = R.usa || { oa: true, indicador: true, habilidad: true, eje: false };
+  const col = { Insuficiente: '#d03b3b', Elemental: '#d99200', Adecuado: '#0c8a0c' };
+  const paginas = lista.map(function (e) {
+    const filas = e.det.map(function (d, k) {
+      const m = R.matriz[k], ab = m.tipo === 'AB';
+      const res = d.om ? 'Omitida' : (ab ? (d.ok === 1 ? 'Correcta' : (d.ok === 0.5 ? 'Parcial' : 'Incorrecta')) : (d.ok ? 'Correcta' : 'Incorrecta'));
+      const col2 = res === 'Correcta' ? '#126b12' : res === 'Parcial' ? '#8a5a00' : res === 'Omitida' ? '#6b7480' : '#a12626';
+      return '<tr><td>' + m.pregunta + '</td>' + (U.oa ? '<td>' + esc(m.oa) + '</td>' : '') + (U.habilidad ? '<td>' + esc(m.habilidad) + '</td>' : '') +
+        '<td style="text-align:center">' + (ab ? (d.om ? '–' : d.p + ' / ' + m.puntaje) : (d.om ? '–' : esc(d.r || d.ok ? (d.ok ? m.clave : d.r) : ''))) + '</td><td style="text-align:center">' + (ab ? 'máx. ' + m.puntaje : esc(m.clave)) + '</td><td style="color:' + col2 + ';font-weight:700">' + (res === 'Correcta' ? '✓ ' : res === 'Incorrecta' ? '✗ ' : '') + res + '</td></tr>';
+    }).join('');
+    return '<section><div class="enc"><b>' + esc(String(S.cat.colegio).toUpperCase()) + '</b><br>Informe de resultados para la familia</div>' +
+      '<table class="datos"><tr><td><b>Estudiante:</b> ' + esc(e.nombre) + '</td><td><b>Curso:</b> ' + esc(e.curso) + '</td></tr><tr><td><b>Evaluación:</b> ' + esc(ev.nombre) + ' (' + esc(ev.tipo) + ')</td><td><b>Asignatura:</b> ' + esc(ev.asignatura) + '</td></tr><tr><td colspan="2"><b>Fecha de aplicación:</b> ' + fechaTxt(ev.fecha) + '</td></tr></table>' +
+      '<div class="kp"><div><span>Nota</span><b style="color:' + (e.nota < c.notaAprob ? '#a12626' : '#1c2733') + '">' + notaTxt(e.nota) + '</b></div><div><span>% de logro</span><b>' + num(e.pct) + ' %</b></div><div><span>Nivel de desempeño</span><b style="color:' + col[e.nivel] + '">' + esc(e.nivel) + '</b></div><div><span>Puntaje</span><b>' + num(e.puntaje, 0) + ' / ' + e.maximo + '</b></div></div>' +
+      '<p class="rs">Preguntas buenas: <b>' + e.buenas + '</b> · Preguntas malas: <b>' + e.malas + '</b> · Omitidas: <b>' + e.omitidas + '</b></p>' +
+      '<table class="det"><thead><tr><th>N°</th>' + (U.oa ? '<th>OA</th>' : '') + (U.habilidad ? '<th>Habilidad</th>' : '') + '<th>Respuesta marcada</th><th>Respuesta correcta</th><th>Resultado</th></tr></thead><tbody>' + filas + '</tbody></table>' +
+      '<div class="msg">' + mensajeMotivador(e.nivel) + '</div>' +
+      '<p class="niv">Niveles: Insuficiente &lt; ' + c.limiteElemental + ' % · Elemental ' + c.limiteElemental + '–' + num(c.limiteAdecuado - 0.1) + ' % · Adecuado ≥ ' + c.limiteAdecuado + ' % (exigencia ' + c.exigencia + ' %).</p>' +
+      '<div class="firmas"><span>Profesor(a) jefe</span><span>Unidad Técnico Pedagógica</span></div></section>';
+  }).join('');
+  const css = 'body{font-family:Arial,Helvetica,sans-serif;color:#1c2733;margin:0}section{padding:22px 30px;page-break-after:always}section:last-child{page-break-after:auto}.enc{text-align:center;border-bottom:3px solid #1f3a5f;padding-bottom:8px;margin-bottom:12px;font-size:13px}.enc b{font-size:16px;color:#1f3a5f}' +
+    'table{border-collapse:collapse;width:100%}.datos td{padding:3px 6px;font-size:13px;border:1px solid #d5dbe3}.kp{display:flex;gap:10px;margin:12px 0}.kp div{flex:1;border:1px solid #d5dbe3;border-radius:8px;padding:8px;text-align:center}.kp span{display:block;font-size:11px;color:#5a6676}.kp b{font-size:22px}' +
+    '.rs{font-size:13px;margin:6px 0 10px}.det th,.det td{border:1px solid #d5dbe3;padding:3px 6px;font-size:11.5px}.det th{background:#eef2f7}.msg{margin:12px 0;padding:10px 12px;background:#f1f7ee;border-left:4px solid #0c8a0c;font-size:13px}.niv{font-size:10.5px;color:#5a6676}.firmas{display:flex;justify-content:space-around;margin-top:34px;font-size:12px}.firmas span{border-top:1px solid #1c2733;padding-top:4px;min-width:200px;text-align:center}@page{size:Letter;margin:10mm}';
+  const w = window.open('', '_blank');
+  if (!w) return toast('El navegador bloqueó la ventana. Permita las ventanas emergentes para este sitio.', 'error');
+  w.document.write('<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe apoderado · ' + esc(ev.nombre) + '</title><style>' + css + '</style></head><body>' + paginas + '</body></html>');
+  w.document.close(); setTimeout(function () { w.focus(); w.print(); }, 400);
 }
 function opcionesBase(escalas, horizontal, etiquetaTooltip) {
   const o = { responsive: true, maintainAspectRatio: false, animation: false, indexAxis: horizontal ? 'y' : 'x',
@@ -1260,6 +1445,12 @@ async function generarRemedial() {
   try {
     const d = await api('remedial', { evalId: $('rm-eval').value, curso: $('rm-curso').value });
     S.cache.rem = d;
+    let imgs = {}, hayImg = false;
+    try {
+      const pedidas = d.preguntasDescendidas.map(function (q) { return q.pregunta; });
+      if (pedidas.length) { const ri = await api('imagenesEvaluacion', { evalId: $('rm-eval').value, preguntas: pedidas }); imgs = ri.imagenes || {}; hayImg = Object.keys(imgs).length > 0; }
+    } catch (e) { /* sin imágenes: el remedial funciona igual */ }
+    const imgTag = function (p, alto) { return imgs[p] ? '<img src="' + imgs[p] + '" alt="Pregunta ' + p + '" style="max-width:100%;max-height:' + (alto || 260) + 'px;border:1px solid var(--line);border-radius:6px;cursor:zoom-in" onclick="verImagen(this.src)">' : ''; };
     $('rm-xls').disabled = false; $('rm-xls').onclick = function () { exportarRemedial(d).catch(errorToast); };
     const c = d.config, rs = d.resumen;
     let h = '<div class="panel doc-remedial">';
@@ -1272,12 +1463,15 @@ async function generarRemedial() {
     } else {
       h += '<h3 style="margin:18px 0 8px">1. Diagnóstico: OA y preguntas descendidas</h3>' + (d.oaDescendidos.length ? '' : '<div class="aviso">Ningún OA tiene un logro promedio bajo el ' + c.umbralRemedial + ' %. Las brechas se concentran en las preguntas específicas que se detallan a continuación.</div>') + '<div class="tabla-cont' + (d.oaDescendidos.length ? '' : ' hidden') + '" style="margin-bottom:14px"><table><thead><tr><th>OA</th><th style="min-width:150px">Logro</th><th>Nivel</th><th>Preguntas</th><th>Habilidades</th></tr></thead><tbody>' +
         d.oaDescendidos.map(function (g) { return '<tr><td><b>' + esc(g.nombre) + '</b>' + (g.critico ? ' <span class="chip alerta">Crítico</span>' : '') + '</td><td>' + barra(g.pct, c.umbralRemedial) + '</td><td>' + chip(g.nivel) + '</td><td>' + g.preguntas.map(function (x) { return 'P' + x; }).join(', ') + '</td><td>' + esc(g.habilidades.join(' · ')) + '</td></tr>'; }).join('') + '</tbody></table></div>';
-      h += '<div class="tabla-cont"><table><thead><tr><th>Pregunta</th><th style="min-width:150px">Logro</th><th>OA</th><th>Habilidad</th><th>Indicador</th><th>Clave</th><th>Distractor más elegido</th></tr></thead><tbody>' +
-        d.preguntasDescendidas.map(function (q) { return '<tr><td><b>P' + q.pregunta + '</b></td><td>' + barra(q.pct, c.umbralRemedial) + '</td><td>' + esc(q.oa) + '</td><td>' + esc(q.habilidad) + '</td><td>' + esc(q.indicador) + '</td><td>' + (q.tipo === 'SM' ? q.clave : 'Abierta') + '</td><td>' + (q.distractor ? q.distractor + ' (' + num(q.distractorPct) + ' %)' : '—') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+      const Uu = d.evaluacion.usa || { oa: true, indicador: true, habilidad: true };
+      if (!hayImg) h += '<div class="aviso no-imprimir">Para ver aquí el enunciado de cada pregunta, cargue las imágenes del instrumento en <b>Evaluaciones → Matriz → Imágenes del instrumento</b>.</div>';
+      h += '<div class="tabla-cont"><table class="ord"><thead><tr><th>Pregunta</th>' + (hayImg ? '<th class="nosort">Ejercicio</th>' : '') + '<th style="min-width:150px">Logro</th>' + (Uu.oa ? '<th>OA</th>' : '') + (Uu.habilidad ? '<th>Habilidad</th>' : '') + (Uu.indicador ? '<th>Indicador</th>' : '') + '<th>Clave</th><th>Distractor más elegido</th></tr></thead><tbody>' +
+        d.preguntasDescendidas.map(function (q) { return '<tr><td data-v="' + q.pregunta + '"><b>P' + q.pregunta + '</b></td>' + (hayImg ? '<td>' + (imgTag(q.pregunta, 150) || '—') + '</td>' : '') + '<td data-v="' + q.pct + '">' + barra(q.pct, c.umbralRemedial) + '</td>' + (Uu.oa ? '<td>' + esc(q.oa) + '</td>' : '') + (Uu.habilidad ? '<td>' + esc(q.habilidad) + '</td>' : '') + (Uu.indicador ? '<td>' + esc(q.indicador) + '</td>' : '') + '<td>' + (q.tipo === 'SM' ? q.clave : 'Abierta') + '</td><td>' + (q.distractor ? q.distractor + ' (' + num(q.distractorPct) + ' %)' : '—') + '</td></tr>'; }).join('') + '</tbody></table></div>';
       h += '<h3 style="margin:22px 0 8px">2. Acciones remediales (ordenadas por prioridad)</h3>';
       d.acciones.forEach(function (a, i) {
         h += '<div class="bloque"><h3><span>Acción ' + (i + 1) + ' · ' + esc(a.oa) + '</span><span class="chip ' + (a.prioridad === 'Crítica' ? 'alerta' : 'Elemental') + '">Prioridad ' + a.prioridad.toLowerCase() + '</span><span class="chip neutro">' + pct(a.pct) + ' de logro</span></h3>';
-        h += '<dl><dt>Indicador de evaluación</dt><dd>' + esc(a.indicador) + '</dd><dt>Habilidad</dt><dd>' + esc(a.habilidad) + ' — foco: ' + esc(a.foco) + '</dd><dt>Preguntas asociadas</dt><dd>' + a.preguntas.map(function (x) { return 'P' + x; }).join(', ') + '</dd><dt>Duración sugerida</dt><dd>' + a.sesiones + ' sesión(es) de 45 minutos</dd>';
+        const ejercicios = hayImg ? a.preguntas.filter(function (x) { return imgs[x]; }).map(function (x) { return '<div style="display:inline-block;margin:0 10px 8px 0;vertical-align:top"><small style="color:var(--muted)">P' + x + '</small><br>' + imgTag(x, 280) + '</div>'; }).join('') : '';
+        h += '<dl>' + (Uu.indicador && a.indicador ? '<dt>Indicador de evaluación</dt><dd>' + esc(a.indicador) + '</dd>' : '') + '<dt>Habilidad</dt><dd>' + esc(a.habilidad) + ' — foco: ' + esc(a.foco) + '</dd><dt>Preguntas asociadas</dt><dd>' + a.preguntas.map(function (x) { return 'P' + x; }).join(', ') + '</dd>' + (ejercicios ? '<dt>Ejercicio del instrumento (recordatorio)</dt><dd>' + ejercicios + '</dd>' : '') + '<dt>Duración sugerida</dt><dd>' + a.sesiones + ' sesión(es) de 45 minutos</dd>';
         h += '<dt>Análisis del error</dt><dd><ul>' + a.errores.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></dd>';
         h += '<dt>Secuencia didáctica</dt><dd><ol>' + a.secuencia.map(function (s) { return '<li><b>' + esc(s.momento) + ':</b> ' + esc(s.descripcion) + '</li>'; }).join('') + '</ol></dd>';
         h += '<dt>Diseño Universal (DUA)</dt><dd><ul><li><b>Representación:</b> ' + esc(a.dua.representacion) + '</li><li><b>Compromiso:</b> ' + esc(a.dua.compromiso) + '</li><li><b>Acción y expresión:</b> ' + esc(a.dua.accionExpresion) + '</li></ul></dd>';
@@ -1294,6 +1488,7 @@ async function generarRemedial() {
     h += '<div class="aviso" style="margin-top:16px">Los estudiantes PIE requieren coordinación con la educadora diferencial para aplicar las adecuaciones definidas en su PACI (Decreto N°83 y Decreto N°170). Se sugiere reevaluar los indicadores descendidos en un plazo máximo de 3 semanas y registrar el avance en el monitoreo PME.</div>';
     h += '</div>';
     $('rm-res').innerHTML = h;
+    $('rm-res').querySelectorAll('table.ord').forEach(function (tb) { hacerOrdenable(tb); });
   } catch (e) { $('rm-res').innerHTML = '<div class="aviso error">' + esc(e.message) + '</div>'; }
 }
 async function exportarRemedial(d) {
@@ -1323,14 +1518,17 @@ async function exportarRemedial(d) {
  * ===================================================================== */
 async function vUsuarios() {
   const lista = await api('listarUsuarios', {});
-  let h = cabecera('Usuarios y accesos', 'Cada docente accede solo a los cursos y asignaturas asignados. Las claves se almacenan cifradas; al crear o restablecer, se entrega una clave temporal que el usuario debe cambiar en su primer ingreso.', '<button class="btn prim" onclick="editarUsuario()">+ Usuario</button>');
-  h += '<div class="panel"><div class="filtros" style="margin-bottom:10px"><div><label>Buscar</label><input placeholder="Nombre o usuario" oninput="filtrarTabla(\'t-us\',this.value)"></div></div><div class="tabla-cont"><table id="t-us"><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Cursos asignados</th><th>Último ingreso</th><th>Estado</th><th></th></tr></thead><tbody>' +
+  let h = cabecera('Usuarios y accesos', 'Cada docente accede solo a los cursos y asignaturas asignados. Las claves se almacenan cifradas; al crear o restablecer, se entrega una clave temporal que el usuario debe cambiar en su primer ingreso.', '<button class="btn" onclick="plantillaUsuarios().catch(errorToast)">Plantilla de carga masiva</button><button class="btn" onclick="importarUsuarios()">Cargar usuarios (Excel)</button><button class="btn" onclick="exportarUsuarios(' + "''" + ').catch(errorToast)">Exportar listado</button><button class="btn prim" onclick="editarUsuario()">+ Usuario</button>');
+  h += '<div class="panel"><div class="filtros" style="margin-bottom:10px"><div><label>Buscar</label><input placeholder="Nombre, usuario, rol o curso" oninput="filtrarTabla(\'t-us\',this.value)"></div></div><div class="tabla-cont"><table id="t-us" class="ord"><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Cursos asignados</th><th>Último ingreso</th><th>Estado</th><th></th></tr></thead><tbody>' +
     lista.map(function (u) {
       const asig = u.rol === 'docente' ? (u.asignaciones.length ? u.asignaciones.map(function (a) { return a.curso + ' · ' + (a.asignatura === '*' ? 'Todas' : a.asignatura); }).join('<br>') : '<span class="chip alerta">Sin cursos</span>') : '<span style="color:var(--muted)">Todos</span>';
       return '<tr><td>' + esc(u.nombre) + (u.correo ? '<br><small style="color:var(--muted)">' + esc(u.correo) + '</small>' : '') + '</td><td>' + esc(u.usuario) + '</td><td>' + esc(ROL_TXT[u.rol]) + '</td><td style="font-size:12px">' + asig + '</td><td>' + (u.ultimoIngreso || '<span style="color:var(--muted)">Nunca</span>') + (u.debeCambiar === 'SI' ? '<br><small style="color:#8a5a00">Clave temporal pendiente</small>' : '') + '</td><td>' + (u.activo === 'SI' ? '<span class="chip Adecuado">Activo</span>' : '<span class="chip neutro">Inactivo</span>') + '</td>' +
         '<td style="white-space:nowrap"><button class="btn mini" onclick=\'editarUsuario(' + JSON.stringify(u).replace(/'/g, '&#39;') + ')\'>Editar</button> <button class="btn mini" onclick="restablecer(\'' + u.id + '\')">Restablecer clave</button></td></tr>';
     }).join('') + '</tbody></table></div></div>';
   $('principal').innerHTML = h;
+  S.cache.usuarios = lista;
+  const tb = $('t-us'); hacerOrdenable(tb);
+  tb.tHead.rows[0].cells[6].classList.add('nosort'); tb.tHead.rows[0].cells[3].classList.add('nosort');
 }
 function editarUsuario(u) {
   u = u || { nombre: '', usuario: '', correo: '', rol: 'docente', asignaciones: [], activo: 'SI' };
@@ -1365,6 +1563,137 @@ function mostrarClave(usuario, clave) {
 async function restablecer(id) {
   if (!await confirmar('Restablecer clave', 'Se generará una nueva clave temporal y la clave actual dejará de funcionar.', 'Restablecer')) return;
   try { const r = await api('restablecerClave', { id: id }); mostrarClave(r.usuario, r.claveTemporal); vUsuarios(); } catch (e) { errorToast(e); }
+}
+
+
+/* ---------- Carga masiva de usuarios ---------- */
+async function plantillaUsuarios() {
+  const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Usuarios');
+  ws.columns = [{ width: 32 }, { width: 20 }, { width: 28 }, { width: 14 }, { width: 22 }, { width: 44 }];
+  const ini = encabezadoInstitucional(ws, 'Carga masiva de usuarios', [
+    'Nombre y Rol son obligatorios. Usuario: opcional (si queda vacío se genera nombre.apellido). Rol: Docente, Directivo o Administrador.',
+    'Cursos: separados por coma (ej.: 4°A, 4°B). Asignaturas: separadas por «;» (ej.: Matemática; Ciencias Naturales). Vacío o «Todas» = todas las asignaturas (profesor jefe).',
+    'Directivos y administradores ven todos los cursos: deje Cursos y Asignaturas vacíos. Borre las filas de ejemplo antes de cargar.'], 6);
+  filaEncabezado(ws, ini, ['Nombre', 'Usuario', 'Correo', 'Rol', 'Cursos', 'Asignaturas']);
+  [['María González Pérez', 'maria.gonzalez', 'maria@colegio.cl', 'Docente', '4°A, 4°B', 'Matemática'], ['Juan Soto Rojas', '', '', 'Docente', '6°A', 'Todas'], ['Ana Díaz Vera', '', '', 'Directivo', '', '']].forEach(function (f, i) {
+    filaDatos(ws, ini + 1 + i, f); ws.getCell(ini + 1 + i, 4).dataValidation = { type: 'list', allowBlank: false, formulae: ['"Docente,Directivo,Administrador"'] };
+  });
+  for (let i = 4; i <= 60; i++) ws.getCell(ini + i, 4).dataValidation = { type: 'list', allowBlank: true, formulae: ['"Docente,Directivo,Administrador"'] };
+  await guardarLibro(wb, 'Plantilla_usuarios.xlsx');
+}
+async function importarUsuarios() {
+  const f = await elegirArchivo(); if (!f) return;
+  try {
+    const filas = await leerExcel(f);
+    const hi = buscarEncabezado(filas, function (c) { return c.indexOf('nombre') === 0; });
+    if (hi < 0) throw new Error('No se encontró la columna "Nombre" en el archivo.');
+    const enc = filas[hi].map(norm), col = function (p) { return enc.findIndex(function (c) { return c.indexOf(p) === 0; }); };
+    const cN = col('nombre'), cU = col('usuario'), cC = col('correo'), cR = col('rol'), cCu = col('curso'), cA = col('asignatura');
+    const datos = [];
+    filas.slice(hi + 1).forEach(function (r, i) {
+      if (!r.join('').trim()) return;
+      datos.push({ fila: hi + 2 + i, nombre: r[cN], usuario: cU >= 0 ? r[cU] : '', correo: cC >= 0 ? r[cC] : '', rol: cR >= 0 ? r[cR] : 'Docente', cursos: cCu >= 0 ? r[cCu] : '', asignaturas: cA >= 0 ? r[cA] : '' });
+    });
+    if (!datos.length) throw new Error('El archivo no tiene filas con datos.');
+    const v = await api('importarUsuarios', { filas: datos, soloValidar: true });
+    let cuerpo = '<p>Se encontraron <b>' + v.validos + '</b> usuarios válidos en <b>' + esc(f.name) + '</b>. Revise los nombres de usuario generados antes de importar.</p>';
+    if (v.errores.length) cuerpo += '<div class="aviso error"><b>' + v.errores.length + ' error(es). Corrija el archivo y vuelva a cargarlo:</b><ul>' + v.errores.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    if (v.advertencias.length) cuerpo += '<div class="aviso advertencia"><b>Advertencias:</b><ul>' + v.advertencias.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    if (v.vista.length) cuerpo += '<div class="tabla-cont" style="max-height:260px"><table><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Cursos</th></tr></thead><tbody>' + v.vista.map(function (x) { return '<tr><td>' + esc(x.nombre) + '</td><td>' + esc(x.usuario) + '</td><td>' + esc(ROL_TXT[x.rol]) + '</td><td>' + esc(x.cursos || '—') + '</td></tr>'; }).join('') + '</tbody></table></div><p style="font-size:13px;color:var(--text-2)">Cada usuario recibe una clave temporal que deberá cambiar en su primer ingreso. Al terminar podrá descargar el listado con las claves.</p>';
+    modal('Carga masiva de usuarios', cuerpo, '<button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn prim" id="iu-ok"' + (v.validos && !v.errores.length ? '' : ' disabled') + '>Crear ' + v.validos + ' usuarios</button>', true);
+    $('iu-ok').onclick = async function () {
+      $('iu-ok').disabled = true; $('iu-ok').textContent = 'Creando…';
+      try {
+        const creados = [];
+        for (let i = 0; i < v.normalizadas.length; i += 25) {
+          const r = await api('importarUsuarios', { filas: v.normalizadas.slice(i, i + 25) });
+          r.creados.forEach(function (x) { creados.push(x); });
+        }
+        cerrarModal(); S.cache.credenciales = creados;
+        modal('Usuarios creados', '<p>Se crearon <b>' + creados.length + '</b> usuarios. Las claves temporales se muestran <b>solo ahora</b>: descargue el listado y entréguelo de forma personal.</p><div class="tabla-cont" style="max-height:300px"><table><thead><tr><th>Nombre</th><th>Usuario</th><th>Clave temporal</th></tr></thead><tbody>' + creados.map(function (x) { return '<tr><td>' + esc(x.nombre) + '</td><td>' + esc(x.usuario) + '</td><td style="font-family:monospace">' + esc(x.claveTemporal) + '</td></tr>'; }).join('') + '</tbody></table></div>',
+          '<button class="btn" id="iu-xls">Descargar Excel con claves</button><button class="btn prim" onclick="cerrarModal()">Listo</button>', true);
+        $('iu-xls').onclick = function () { exportarUsuarios('claves').catch(errorToast); };
+        vUsuarios();
+      } catch (e) { errorToast(e); vUsuarios(); }
+    };
+  } catch (e) { errorToast(e); }
+}
+async function exportarUsuarios(modo) {
+  const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Usuarios');
+  const conClaves = modo === 'claves', lista = conClaves ? S.cache.credenciales : (S.cache.usuarios || await api('listarUsuarios', {}));
+  const tit = conClaves ? ['Nombre', 'Usuario', 'Rol', 'Clave temporal'] : ['Nombre', 'Usuario', 'Correo', 'Rol', 'Cursos asignados', 'Último ingreso', 'Estado'];
+  ws.columns = tit.map(function (t) { return { width: t === 'Cursos asignados' ? 44 : 24 }; });
+  let f = encabezadoInstitucional(ws, conClaves ? 'Credenciales de acceso (clave temporal)' : 'Usuarios y accesos', [conClaves ? 'Entregar de forma personal. La clave debe cambiarse en el primer ingreso. Acceso: www.utp360.cl/evalua/' : 'Generado: ' + new Date().toLocaleString('es-CL')], tit.length);
+  filaEncabezado(ws, f, tit);
+  lista.forEach(function (x) {
+    f++;
+    filaDatos(ws, f, conClaves ? [x.nombre, x.usuario, ROL_TXT[x.rol], x.claveTemporal]
+      : [x.nombre, x.usuario, x.correo || '', ROL_TXT[x.rol], x.rol === 'docente' ? (x.asignaciones || []).map(function (a) { return a.curso + ' · ' + (a.asignatura === '*' ? 'Todas' : a.asignatura); }).join('; ') : 'Todos', x.ultimoIngreso || 'Nunca', x.activo === 'SI' ? 'Activo' : 'Inactivo']);
+  });
+  await guardarLibro(wb, conClaves ? 'Credenciales_usuarios.xlsx' : 'Usuarios.xlsx');
+}
+
+/* ---------- Imágenes del instrumento ---------- */
+function verImagen(src) { modal('Pregunta del instrumento', '<div style="text-align:center"><img src="' + src + '" style="max-width:100%;max-height:75vh"></div>', '<button class="btn prim" onclick="cerrarModal()">Cerrar</button>', true); }
+function comprimirImagen(archivo, ancho) {
+  return new Promise(function (res, rej) {
+    const url = URL.createObjectURL(archivo), im = new Image();
+    im.onload = function () {
+      const k = Math.min(1, ancho / im.width), c = document.createElement('canvas');
+      c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.82));
+    };
+    im.onerror = function () { URL.revokeObjectURL(url); rej(new Error('No se pudo leer la imagen «' + archivo.name + '».')); };
+    im.src = url;
+  });
+}
+async function imagenesInstrumento(evalId) {
+  const ev = ((await evaluaciones()) || []).find(function (e) { return e.id === evalId; });
+  if (!ev) return;
+  const r = await api('imagenesEvaluacion', { evalId: evalId });
+  let archivos = [];
+  const chips = function () { return r.disponibles.length ? r.disponibles.map(function (p) { return '<span class="chip Adecuado" style="margin:2px">P' + p + ' <a href="#" data-q="' + p + '" style="color:#a12626;text-decoration:none" title="Quitar">×</a></span>'; }).join('') : '<span style="color:var(--muted)">Aún no hay imágenes cargadas.</span>'; };
+  modal('Imágenes del instrumento · ' + ev.nombre,
+    '<p style="margin:0 0 8px">Suba <b>una imagen por pregunta</b> (foto o captura del enunciado con sus alternativas). Se muestran en los planes remediales para que el docente no tenga que buscar la prueba. El sistema detecta el número de pregunta desde el nombre del archivo (por ejemplo <code>1.jpg</code>, <code>P12.png</code>, <code>pregunta 03.jpg</code>); puede corregirlo antes de subir.</p>' +
+    '<div class="aviso">Cargadas: <span id="im-chips">' + chips() + '</span></div>' +
+    '<div class="filtros"><div style="min-width:auto"><button class="btn" id="im-elegir">Elegir imágenes…</button></div><span style="color:var(--muted);font-size:13px;align-self:center">JPG, PNG o WEBP. Se reducen automáticamente.</span></div><div id="im-lista"></div>',
+    '<button class="btn" onclick="cerrarModal()">Cerrar</button><button class="btn prim" id="im-subir" disabled>Subir imágenes</button>', true);
+  function enlazarQuitar() {
+    $('im-chips').querySelectorAll('a[data-q]').forEach(function (a) { a.onclick = async function (e) { e.preventDefault(); try { await api('eliminarImagen', { evalId: evalId, pregunta: a.dataset.q }); r.disponibles = r.disponibles.filter(function (p) { return String(p) !== a.dataset.q; }); $('im-chips').innerHTML = chips(); enlazarQuitar(); } catch (er) { errorToast(er); } }; });
+  }
+  enlazarQuitar();
+  function pintarLista() {
+    $('im-lista').innerHTML = archivos.length ? '<div class="tabla-cont" style="max-height:300px"><table><thead><tr><th>Archivo</th><th style="width:110px">Pregunta N°</th></tr></thead><tbody>' + archivos.map(function (a, i) { return '<tr><td>' + esc(a.f.name) + '</td><td><input type="number" min="1" max="' + ev.numPreguntas + '" value="' + (a.p || '') + '" data-i="' + i + '" style="width:80px"></td></tr>'; }).join('') + '</tbody></table></div>' : '';
+    $('im-lista').querySelectorAll('input').forEach(function (inp) { inp.oninput = function () { archivos[Number(inp.dataset.i)].p = Number(inp.value) || 0; }; });
+    $('im-subir').disabled = !archivos.length;
+  }
+  $('im-elegir').onclick = function () {
+    const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.accept = 'image/*';
+    i.onchange = function () { archivos = Array.from(i.files).map(function (f) { const m = /(\d+)/.exec(f.name); return { f: f, p: m ? Number(m[1]) : 0 }; }).sort(function (a, b) { return a.p - b.p; }); pintarLista(); };
+    i.click();
+  };
+  $('im-subir').onclick = async function () {
+    const malos = archivos.filter(function (a) { return !(a.p >= 1 && a.p <= ev.numPreguntas); });
+    if (malos.length) return toast('Indique un número de pregunta válido (1 a ' + ev.numPreguntas + ') para: ' + malos.map(function (a) { return a.f.name; }).join(', '), 'error');
+    const rep = {}; archivos.forEach(function (a) { rep[a.p] = (rep[a.p] || 0) + 1; });
+    const dup = Object.keys(rep).filter(function (k) { return rep[k] > 1; });
+    if (dup.length) return toast('Hay más de una imagen para la pregunta ' + dup.join(', ') + '.', 'error');
+    $('im-subir').disabled = true;
+    try {
+      let hechas = 0;
+      for (let i = 0; i < archivos.length; i += 3) {
+        $('im-subir').textContent = 'Subiendo ' + hechas + ' de ' + archivos.length + '…';
+        const lote = archivos.slice(i, i + 3), items = [];
+        for (const a of lote) items.push({ pregunta: a.p, dataUrl: await comprimirImagen(a.f, 1100) });
+        await api('guardarImagenes', { evalId: evalId, items: items });
+        hechas += lote.length;
+      }
+      archivos.forEach(function (a) { if (r.disponibles.indexOf(a.p) < 0) r.disponibles.push(a.p); });
+      r.disponibles.sort(function (a, b) { return a - b; }); $('im-chips').innerHTML = chips(); enlazarQuitar();
+      archivos = []; pintarLista(); $('im-subir').textContent = 'Subir imágenes'; toast(hechas + ' imagen(es) guardada(s).', 'ok');
+    } catch (e) { errorToast(e); $('im-subir').textContent = 'Subir imágenes'; $('im-subir').disabled = false; }
+  };
 }
 
 /* =====================================================================
