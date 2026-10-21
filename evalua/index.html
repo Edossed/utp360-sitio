@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UTP360 · Evalúa</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#1f3a5f; --navy-2:#2b4d7a; --navy-soft:#e8eef6; --bg:#f4f6f9; --surface:#ffffff; --line:#dde3ea;
+  --text:#18212b; --text-2:#4d5a68; --muted:#7a8694;
+  --serie:#2a78d6; --serie-2:#eb6834;
+  --insuf:#d03b3b; --elem:#fab219; --adec:#0ca30c;
+  --insuf-bg:#fbe9e9; --elem-bg:#fff4dc; --adec-bg:#e5f6e5;
+  --radius:10px; --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;color:var(--text);background:var(--bg)}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em}
+h1{font-size:22px} h2{font-size:18px} h3{font-size:15px}
+a{color:var(--navy-2)}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #9bb7dc;outline-offset:0;border-color:#9bb7dc}
+label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:4px}
+.hidden{display:none!important}
+
+/* Botones */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--text);padding:8px 14px;border-radius:8px;font-weight:600;white-space:nowrap}
+.btn:hover{background:#f2f5f9}
+.btn.prim{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.prim:hover{background:var(--navy-2)}
+.btn.peligro{color:#a12626;border-color:#f0c4c4}
+.btn.peligro:hover{background:#fdf0f0}
+.btn.mini{padding:4px 9px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Acceso */
+#acceso{min-height:100%;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(160deg,#1f3a5f 0%,#2b4d7a 60%,#3f6aa3 100%)}
+.tarjeta-acceso{background:#fff;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.25);padding:32px;width:100%;max-width:380px}
+.tarjeta-acceso h1{color:var(--navy);margin-bottom:4px}
+.tarjeta-acceso p{color:var(--text-2);margin:0 0 20px}
+.tarjeta-acceso .campo{margin-bottom:14px}
+.tarjeta-acceso input{width:100%}
+.tarjeta-acceso .btn{width:100%;justify-content:center;padding:10px}
+.msg-error{background:var(--insuf-bg);color:#8d1f1f;border-radius:8px;padding:9px 12px;font-size:13px;margin-bottom:12px}
+.sello{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.sello .logo{width:42px;height:42px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+
+/* Estructura */
+#app{display:flex;min-height:100%}
+#menu{width:236px;flex:none;background:var(--navy);color:#dfe7f2;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+#menu .cab{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+#menu .cab b{display:block;color:#fff;font-size:15px}
+#menu .cab span{font-size:12px;color:#a9bbd3}
+#menu nav{flex:1;overflow:auto;padding:10px 8px}
+#menu nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;color:#dfe7f2;padding:9px 12px;border-radius:8px;font-weight:500}
+#menu nav button:hover{background:rgba(255,255,255,.08)}
+#menu nav button.activo{background:#fff;color:var(--navy);font-weight:600}
+#menu nav .sep{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#8fa6c4;padding:14px 12px 6px}
+#menu .pie{padding:12px 16px;border-top:1px solid rgba(255,255,255,.1);font-size:12px}
+#menu .pie b{color:#fff;display:block;font-size:13px}
+#menu .pie button{margin-top:8px;background:rgba(255,255,255,.1);border:0;color:#fff;padding:6px 10px;border-radius:6px;font-size:12px}
+#principal{flex:1;min-width:0;padding:24px 28px 48px}
+.barra-movil{display:none}
+.cabecera{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.cabecera p{margin:4px 0 0;color:var(--text-2)}
+.acciones{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Componentes */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.panel>h3{margin-bottom:12px}
+.panel .sub{color:var(--text-2);font-size:13px;margin:-6px 0 12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.kpi span{display:block;font-size:12px;color:var(--text-2);font-weight:500}
+.kpi b{display:block;font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi small{color:var(--muted);font-size:12px}
+.filtros{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+.filtros>div{min-width:150px}
+.filtros select,.filtros input{width:100%}
+.rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.tabla-cont{overflow:auto;border:1px solid var(--line);border-radius:8px;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{background:#f3f6fa;color:var(--text-2);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;z-index:1}
+td{padding:7px 10px;border-bottom:1px solid #edf0f4;vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:#fafbfd}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.cen,th.cen{text-align:center}
+.vacio{padding:28px;text-align:center;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.chip.Insuficiente{background:var(--insuf-bg);color:#a12626}
+.chip.Elemental{background:var(--elem-bg);color:#8a5a00}
+.chip.Adecuado{background:var(--adec-bg);color:#126b12}
+.chip.neutro{background:#eef1f5;color:var(--text-2)}
+.chip.neutro::before{display:none}
+.chip.alerta{background:var(--insuf-bg);color:#a12626}
+.barra{height:8px;border-radius:4px;background:#eef1f5;overflow:hidden;min-width:80px}
+.barra i{display:block;height:100%;border-radius:4px;background:var(--serie)}
+.barra i.bajo{background:var(--insuf)}
+.celda-barra{display:flex;align-items:center;gap:8px}
+.celda-barra b{min-width:46px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.pestanas{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow:auto}
+.pestanas button{background:none;border:0;padding:10px 14px;font-weight:600;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap}
+.pestanas button.activo{color:var(--navy);border-bottom-color:var(--navy)}
+.aviso{background:var(--navy-soft);border-radius:8px;padding:10px 14px;color:#203a5c;font-size:13px;margin-bottom:14px}
+.aviso.advertencia{background:var(--elem-bg);color:#6e4800}
+.aviso.error{background:var(--insuf-bg);color:#8d1f1f}
+.aviso ul{margin:6px 0 0;padding-left:18px;max-height:180px;overflow:auto}
+.leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-2);margin-top:8px}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}
+.leyenda i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.lienzo{position:relative;height:280px}
+.cm td,.cm th{padding:5px 6px;text-align:center}
+.cm td.nom,.cm th.nom{text-align:left;position:sticky;left:0;background:#fff;z-index:2;white-space:nowrap}
+.cm th.nom{background:#f3f6fa;z-index:3}
+.cm .ok{background:#e5f6e5;color:#126b12;font-weight:600}
+.cm .mal{background:#fbe9e9;color:#a12626}
+.cm .om{background:#f3f4f6;color:#9aa3ad}
+.cm .par{background:#fff4dc;color:#8a5a00;font-weight:600}
+.mapa td.cel{text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
+.doc-remedial h2{color:var(--navy);margin-bottom:6px}
+.doc-remedial .bloque{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;break-inside:avoid}
+.doc-remedial .bloque h3{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.doc-remedial dl{display:grid;grid-template-columns:170px 1fr;gap:6px 12px;margin:10px 0}
+.doc-remedial dt{font-weight:600;color:var(--text-2);font-size:13px}
+.doc-remedial dd{margin:0}
+.doc-remedial ol,.doc-remedial ul{margin:4px 0;padding-left:20px}
+.marca-pie{font-size:11px;color:var(--muted);margin-left:4px;font-weight:600;border:1px solid var(--line);border-radius:4px;padding:0 4px}
+
+/* Modal */
+#capa{position:fixed;inset:0;background:rgba(15,23,35,.45);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;z-index:50}
+.modal{background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:640px}
+.modal.ancho{max-width:960px}
+.modal .m-cab{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.modal .m-cab button{background:none;border:0;font-size:22px;line-height:1;color:var(--muted)}
+.modal .m-cuerpo{padding:18px 20px;max-height:70vh;overflow:auto}
+.modal .m-pie{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.form{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.form .full{grid-column:1/-1}
+.form input,.form select,.form textarea{width:100%}
+
+#cargando{position:fixed;inset:0;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;z-index:60}
+.spin{width:36px;height:36px;border:3px solid #cfd9e6;border-top-color:var(--navy);border-radius:50%;animation:g .8s linear infinite}
+@keyframes g{to{transform:rotate(360deg)}}
+#avisos{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:70}
+.toast{background:#18212b;color:#fff;padding:10px 16px;border-radius:8px;box-shadow:var(--shadow);max-width:360px;font-size:13px}
+.toast.error{background:#a12626}
+.toast.ok{background:#126b12}
+
+.interruptor{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #edf0f4}
+.interruptor:last-child{border-bottom:0}
+.interruptor b{display:block}
+.interruptor small{color:var(--text-2)}
+.sw{position:relative;width:44px;height:24px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#c9d1db;border-radius:999px;transition:.15s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked+span{background:#126b12}
+.sw input:checked+span::before{transform:translateX(20px)}
+.sw input:focus-visible+span{outline:2px solid #9bb7dc}
+.estado-perm{font-size:12px;font-weight:600}
+.matriz input,.matriz select{padding:5px 6px;font-size:12px;width:100%}
+.matriz td{padding:4px 5px}
+.matriz td:first-child{font-weight:600;text-align:center}
+
+@media (max-width:860px){
+  #menu{position:fixed;left:-260px;transition:left .2s;z-index:40}
+  #menu.abierto{left:0}
+  .barra-movil{display:flex;align-items:center;gap:10px;background:var(--navy);color:#fff;padding:10px 16px;position:sticky;top:0;z-index:30}
+  .barra-movil button{background:none;border:0;color:#fff;font-size:22px}
+  #principal{padding:16px}
+  .form{grid-template-columns:1fr}
+  .doc-remedial dl{grid-template-columns:1fr}
+}
+@media print{
+  #menu,.barra-movil,.acciones,.filtros,.pestanas,.no-imprimir,#avisos{display:none!important}
+  body{background:#fff}
+  #principal{padding:0}
+  .panel{box-shadow:none;border:0;padding:0}
+  .tabla-cont{overflow:visible;border:0}
+  th{position:static}
+}
+</style>
+</head>
+<body>
+
+<!-- ACCESO -->
+<div id="acceso" class="hidden">
+  <div class="tarjeta-acceso">
+    <div class="sello"><img id="logo-utp360" src="https://www.utp360.cl/logo.png" alt="UTP360" style="height:42px;max-width:150px;object-fit:contain" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo',textContent:'360'}))"><div><b>UTP360 · Evalúa</b><br><span id="sello-colegio" style="color:var(--text-2);font-size:12px">Evaluaciones y resultados de aprendizaje</span></div></div>
+    <div id="form-login">
+      <h1>Ingreso docente</h1>
+      <p>Ingrese el código de su establecimiento y el usuario y clave asignados por UTP.</p>
+      <div id="login-error" class="msg-error hidden"></div>
+      <div class="campo" id="campo-codigo"><label for="l-codigo">Código de acceso del establecimiento</label><input id="l-codigo" autocomplete="organization" autocapitalize="off" spellcheck="false"></div>
+      <div class="campo"><label for="l-usuario">Usuario</label><input id="l-usuario" autocomplete="username"></div>
+      <div class="campo"><label for="l-clave">Clave</label><input id="l-clave" type="password" autocomplete="current-password"></div>
+      <button class="btn prim" id="btn-login">Ingresar</button>
+    </div>
+    <div id="form-cambio" class="hidden">
+      <h1>Cambie su clave</h1>
+      <p>Su clave es temporal. Defina una clave personal de al menos 8 caracteres que combine letras y números.</p>
+      <div id="cambio-error" class="msg-error hidden"></div>
+      <div class="campo"><label>Clave actual (temporal)</label><input id="c-actual" type="password"></div>
+      <div class="campo"><label>Nueva clave</label><input id="c-nueva" type="password"></div>
+      <div class="campo"><label>Repita la nueva clave</label><input id="c-nueva2" type="password"></div>
+      <button class="btn prim" id="btn-cambio">Guardar y continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- APLICACIÓN -->
+<div id="app" class="hidden">
+  <aside id="menu">
+    <div class="cab"><b>UTP360 · Evalúa</b><span id="cab-colegio"></span></div>
+    <nav id="nav"></nav>
+    <div class="pie"><b id="pie-nombre"></b><span id="pie-rol"></span><br><button id="btn-salir">Cerrar sesión</button></div>
+  </aside>
+  <div style="flex:1;min-width:0">
+    <div class="barra-movil"><button id="btn-menu" aria-label="Abrir menú">☰</button><b>UTP360 · Evalúa</b></div>
+    <main id="principal"></main>
+  </div>
+</div>
+
+<div id="capa" class="hidden"></div>
+<div id="cargando" class="hidden"><div class="spin"></div></div>
+<div id="avisos"></div>
+
+<script>
+/* =====================================================================
+ *  ESTADO, COMUNICACIÓN Y UTILIDADES
+ * ===================================================================== */
+const S = { token: null, user: null, cat: null, vista: 'inicio', graficos: [], cache: {} };
+const NIVELES = ['Insuficiente', 'Elemental', 'Adecuado'];
+const COLOR_NIVEL = { Insuficiente: '#d03b3b', Elemental: '#fab219', Adecuado: '#0ca30c' };
+const ROL_TXT = { admin: 'Administrador (UTP)', directivo: 'Directivo (solo lectura)', docente: 'Docente' };
+
+/* Dos modos de funcionamiento con el mismo archivo:
+   - Dentro de Google Apps Script (URL del colegio): usa google.script.run.
+   - Portal utp360.cl: el docente ingresa el código del colegio; se busca la URL
+     de su servidor en colegios.json y se conecta por HTTPS (fetch). */
+const MODO_PORTAL = !(window.google && google.script && google.script.run);
+function guardarSesion(t) {
+  try {
+    if (t) { sessionStorage.setItem('pe_token', t); if (S.apiUrl) sessionStorage.setItem('pe_api', S.apiUrl); }
+    else { sessionStorage.removeItem('pe_token'); sessionStorage.removeItem('pe_api'); }
+  } catch (e) {}
+}
+function leerSesion() { try { S.apiUrl = sessionStorage.getItem('pe_api') || null; return sessionStorage.getItem('pe_token'); } catch (e) { return null; } }
+function normCodigo(c) { return String(c || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9-]/g, ''); }
+async function sha256(txt) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+  return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+}
+/* colegios.json: { "colegios": { "<sha256 del código>": "https://script.google.com/macros/s/…/exec" } }
+   Se guarda el código cifrado (hash) para no publicar la lista de colegios clientes. */
+async function resolverColegio(codigo) {
+  const c = normCodigo(codigo);
+  if (!c) throw new Error('Ingrese el código de acceso de su establecimiento.');
+  let dir;
+  try { const r = await fetch('colegios.json?v=' + Date.now(), { cache: 'no-store' }); dir = await r.json(); }
+  catch (e) { throw new Error('No fue posible leer el directorio de establecimientos. Intente nuevamente.'); }
+  const url = dir && dir.colegios && dir.colegios[await sha256(c)];
+  if (!url) throw new Error('El código de acceso no es válido. Verifíquelo o escriba a contacto@utp360.cl.');
+  try { localStorage.setItem('pe_codigo', c); } catch (e) {}
+  return url;
+}
+function transporte(accion, datos) {
+  if (!MODO_PORTAL) {
+    return new Promise(function (res, rej) {
+      google.script.run.withSuccessHandler(res)
+        .withFailureHandler(function (e) { rej(new Error(e && e.message ? e.message : 'Error de comunicación con el servidor.')); })
+        .api(accion, S.token, datos || {});
+    });
+  }
+  if (!S.apiUrl) return Promise.reject(new Error('SESION_EXPIRADA'));
+  return fetch(S.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ accion: accion, token: S.token, datos: datos || {} }) })
+    .then(function (r) { if (!r.ok) throw new Error('El servidor del establecimiento respondió con error (' + r.status + ').'); return r.text(); })
+    .catch(function (e) { throw new Error(e.message && e.message.indexOf('servidor') >= 0 ? e.message : 'No fue posible conectar con el servidor del establecimiento. Revise su conexión a internet.'); });
+}
+
+let pendientes = 0;
+function cargando(on) { pendientes += on ? 1 : -1; if (pendientes < 0) pendientes = 0; document.getElementById('cargando').classList.toggle('hidden', pendientes === 0); }
+
+function api(accion, datos, silencioso) {
+  if (!silencioso) cargando(true);
+  return transporte(accion, datos).then(function (txt) {
+    if (!silencioso) cargando(false);
+    let r; try { r = JSON.parse(txt); } catch (e) { throw new Error('Respuesta no válida del servidor.'); }
+    if (r.ok) return r.data;
+    if (r.error === 'SESION_EXPIRADA') { salirLocal('Su sesión expiró. Ingrese nuevamente.'); }
+    else if (r.error === 'DEBE_CAMBIAR_CLAVE') { mostrarCambio(); }
+    throw new Error(r.error);
+  }, function (e) {
+    if (!silencioso) cargando(false);
+    if (e.message === 'SESION_EXPIRADA') salirLocal('Su sesión expiró. Ingrese nuevamente.');
+    throw e;
+  });
+}
+
+function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function num(x, d) { if (x === null || x === undefined || x === '' || isNaN(x)) return '—'; return Number(x).toLocaleString('es-CL', { minimumFractionDigits: d === undefined ? 1 : d, maximumFractionDigits: d === undefined ? 1 : d }); }
+function pct(x) { return x === null || x === undefined ? '—' : num(x, 1) + ' %'; }
+function notaTxt(x) { return x === null || x === undefined ? '—' : num(x, 1); }
+function chip(nivel) { return nivel ? '<span class="chip ' + esc(nivel) + '">' + esc(nivel) + '</span>' : '<span class="chip neutro">—</span>'; }
+function barra(p, umbral) { if (p === null || p === undefined) return '—'; const bajo = umbral !== undefined && p < umbral; return '<div class="celda-barra"><div class="barra" style="flex:1"><i class="' + (bajo ? 'bajo' : '') + '" style="width:' + Math.max(0, Math.min(100, p)) + '%"></i></div><b>' + pct(p) + '</b></div>'; }
+function $(id) { return document.getElementById(id); }
+function toast(msg, tipo) { const d = document.createElement('div'); d.className = 'toast ' + (tipo || ''); d.textContent = msg; $('avisos').appendChild(d); setTimeout(function () { d.remove(); }, tipo === 'error' ? 7000 : 4000); }
+function errorToast(e) { if (e && (e.message === 'SESION_EXPIRADA' || e.message === 'DEBE_CAMBIAR_CLAVE')) return; toast(e && e.message ? e.message : String(e), 'error'); }
+function hoyISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function fechaTxt(f) { if (!f) return '—'; const p = String(f).slice(0, 10).split('-'); return p.length === 3 ? p[2] + '-' + p[1] + '-' + p[0] : f; }
+function esAdmin() { return S.user && S.user.rol === 'admin'; }
+function puedeEditar() { return S.user && (S.user.rol === 'admin' || S.user.rol === 'docente'); }
+function nombreArchivo(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, ''); }
+function destruirGraficos() { S.graficos.forEach(function (g) { try { g.destroy(); } catch (e) {} }); S.graficos = []; }
+
+function modal(titulo, cuerpo, pie, ancho) {
+  const capa = $('capa');
+  capa.innerHTML = '<div class="modal ' + (ancho ? 'ancho' : '') + '"><div class="m-cab"><h3>' + esc(titulo) + '</h3><button onclick="cerrarModal()" aria-label="Cerrar">×</button></div><div class="m-cuerpo">' + cuerpo + '</div>' + (pie ? '<div class="m-pie">' + pie + '</div>' : '') + '</div>';
+  capa.classList.remove('hidden');
+}
+function cerrarModal() { $('capa').classList.add('hidden'); $('capa').innerHTML = ''; }
+function confirmar(titulo, texto, etiqueta) {
+  return new Promise(function (res) {
+    modal(titulo, '<p style="margin:0">' + texto + '</p>', '<button class="btn" id="cf-no">Cancelar</button><button class="btn prim" id="cf-si">' + esc(etiqueta || 'Confirmar') + '</button>');
+    $('cf-no').onclick = function () { cerrarModal(); res(false); };
+    $('cf-si').onclick = function () { cerrarModal(); res(true); };
+  });
+}
+
+/* =====================================================================
+ *  ACCESO
+ * ===================================================================== */
+function mostrarAcceso() {
+  $('app').classList.add('hidden'); $('acceso').classList.remove('hidden'); $('form-login').classList.remove('hidden'); $('form-cambio').classList.add('hidden');
+  $('campo-codigo').classList.toggle('hidden', !MODO_PORTAL);
+  if (MODO_PORTAL && !$('l-codigo').value) {
+    let c = new URLSearchParams(location.search).get('c') || '';
+    if (!c) { try { c = localStorage.getItem('pe_codigo') || ''; } catch (e) {} }
+    $('l-codigo').value = c;
+  }
+  setTimeout(function () { (MODO_PORTAL && !$('l-codigo').value ? $('l-codigo') : $('l-usuario')).focus(); }, 50);
+}
+function mostrarCambio() { $('app').classList.add('hidden'); $('acceso').classList.remove('hidden'); $('form-login').classList.add('hidden'); $('form-cambio').classList.remove('hidden'); }
+function salirLocal(msg) { S.token = null; S.user = null; guardarSesion(null); mostrarAcceso(); if (msg) { $('login-error').textContent = msg; $('login-error').classList.remove('hidden'); } }
+
+$('btn-login').onclick = async function () {
+  $('login-error').classList.add('hidden');
+  try {
+    if (MODO_PORTAL) { cargando(true); try { S.apiUrl = await resolverColegio($('l-codigo').value); } finally { cargando(false); } }
+    const r = await api('login', { usuario: $('l-usuario').value, clave: $('l-clave').value });
+    S.token = r.token; S.user = r.usuario; guardarSesion(r.token);
+    $('l-clave').value = '';
+    if (r.usuario.debeCambiar === 'SI') { mostrarCambio(); return; }
+    await iniciarApp();
+    if (r.ingresoAnterior) toast('Bienvenido(a). Último ingreso: ' + r.ingresoAnterior);
+  } catch (e) { if (e.message !== 'DEBE_CAMBIAR_CLAVE') { $('login-error').textContent = e.message; $('login-error').classList.remove('hidden'); } }
+};
+$('l-clave').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btn-login').click(); });
+$('l-usuario').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('l-clave').focus(); });
+$('l-codigo').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('l-usuario').focus(); });
+
+$('btn-cambio').onclick = async function () {
+  $('cambio-error').classList.add('hidden');
+  if ($('c-nueva').value !== $('c-nueva2').value) { $('cambio-error').textContent = 'Las claves nuevas no coinciden.'; $('cambio-error').classList.remove('hidden'); return; }
+  try {
+    S.user = await api('cambiarClave', { actual: $('c-actual').value, nueva: $('c-nueva').value });
+    ['c-actual', 'c-nueva', 'c-nueva2'].forEach(function (i) { $(i).value = ''; });
+    toast('Clave actualizada correctamente.', 'ok');
+    await iniciarApp();
+  } catch (e) { $('cambio-error').textContent = e.message; $('cambio-error').classList.remove('hidden'); }
+};
+$('btn-salir').onclick = async function () { try { await api('logout', {}); } catch (e) {} salirLocal(); };
+$('btn-menu').onclick = function () { $('menu').classList.toggle('abierto'); };
+
+async function iniciarApp() {
+  S.cat = await api('catalogos', {});
+  S.user = S.cat.usuario;
+  $('acceso').classList.add('hidden'); $('app').classList.remove('hidden');
+  $('pie-nombre').textContent = S.user.nombre; $('pie-rol').textContent = ROL_TXT[S.user.rol] || S.user.rol;
+  $('cab-colegio').textContent = S.cat.colegio; document.title = 'UTP360 · Evalúa · ' + S.cat.colegio;
+  construirMenu();
+  ir('inicio');
+}
+
+const VISTAS = [
+  { id: 'inicio', txt: 'Inicio', ic: '◧' },
+  { sep: 'Gestión' },
+  { id: 'estudiantes', txt: 'Estudiantes', ic: '♙' },
+  { id: 'evaluaciones', txt: 'Evaluaciones y matriz', ic: '☰' },
+  { id: 'carga', txt: 'Carga y eximición', ic: '⇪', roles: ['admin', 'docente'] },
+  { sep: 'Resultados' },
+  { id: 'resultados', txt: 'Resultados', ic: '▤' },
+  { id: 'comparativo', txt: 'Comparativos', ic: '⇆' },
+  { id: 'remediales', txt: 'Remediales', ic: '✚' },
+  { sep: 'Administración', roles: ['admin'] },
+  { id: 'usuarios', txt: 'Usuarios y accesos', ic: '☺', roles: ['admin'] },
+  { id: 'permisos', txt: 'Permisos docentes', ic: '⊘', roles: ['admin'] },
+  { id: 'configuracion', txt: 'Configuración', ic: '⚙', roles: ['admin'] },
+  { id: 'bitacora', txt: 'Bitácora', ic: '⏱', roles: ['admin'] },
+  { sep: 'Cuenta' },
+  { id: 'cuenta', txt: 'Mi cuenta', ic: '⚿' }
+];
+function construirMenu() {
+  $('nav').innerHTML = VISTAS.filter(function (v) { return !v.roles || v.roles.indexOf(S.user.rol) >= 0; }).map(function (v) {
+    return v.sep ? '<div class="sep">' + v.sep + '</div>' : '<button data-v="' + v.id + '"><span style="width:18px;text-align:center">' + v.ic + '</span>' + v.txt + '</button>';
+  }).join('');
+  $('nav').querySelectorAll('button').forEach(function (b) { b.onclick = function () { ir(b.dataset.v); $('menu').classList.remove('abierto'); }; });
+}
+function ir(v, params) {
+  S.vista = v;
+  $('nav').querySelectorAll('button').forEach(function (b) { b.classList.toggle('activo', b.dataset.v === v); });
+  destruirGraficos();
+  const fn = { inicio: vInicio, estudiantes: vEstudiantes, evaluaciones: vEvaluaciones, matriz: vMatriz, carga: vCarga, resultados: vResultados,
+    comparativo: vComparativo, remediales: vRemediales, usuarios: vUsuarios, permisos: vPermisos, configuracion: vConfiguracion, bitacora: vBitacora, cuenta: vCuenta }[v];
+  $('principal').innerHTML = '';
+  window.scrollTo(0, 0);
+  Promise.resolve(fn(params || {})).catch(errorToast);
+}
+function pr_ok(d, k) { return d.usuario && d.usuario.permisos && d.usuario.permisos[k]; }
+function cabecera(titulo, sub, acciones) {
+  return '<div class="cabecera"><div><h1>' + esc(titulo) + '</h1>' + (sub ? '<p>' + sub + '</p>' : '') + '</div><div class="acciones">' + (acciones || '') + '</div></div>';
+}
+
+/* Selector de evaluaciones y cursos reutilizable */
+async function refrescarPermisos() { if (S.user.rol !== 'docente') return; S.cat = await api('catalogos', {}, true); S.user = S.cat.usuario; }
+function perm(k) { return S.user.rol === 'admin' || (S.user.rol === 'docente' && S.user.permisos && S.user.permisos[k]); }
+async function evaluaciones(forzar) { if (!S.cache.evals || forzar) S.cache.evals = await api('listarEvaluaciones', {}); return S.cache.evals; }
+function etiquetaEval(e) { return fechaTxt(e.fecha) + ' · ' + e.tipo + ' · ' + e.nombre + ' (' + e.nivel + '° · ' + e.asignatura + ')'; }
+function opcionesEval(lista, sel) { return '<option value="">Seleccione una evaluación…</option>' + lista.map(function (e) { return '<option value="' + e.id + '"' + (e.id === sel ? ' selected' : '') + '>' + esc(etiquetaEval(e)) + '</option>'; }).join(''); }
+function cursosPara(ev) {
+  if (!ev) return [];
+  return S.cat.cursos.filter(function (c) {
+    if (Number(c.charAt(0)) !== ev.nivel) return false;
+    if (S.user.rol !== 'docente') return true;
+    return S.user.asignaciones.some(function (a) { return a.curso === c && (a.asignatura === '*' || a.asignatura === ev.asignatura); });
+  });
+}
+function opcionesCurso(cursos, sel, conTodos) {
+  return (conTodos && cursos.length > 1 ? '<option value="*"' + (sel === '*' ? ' selected' : '') + '>Todos los cursos del nivel</option>' : '') +
+    cursos.map(function (c) { return '<option' + (c === sel ? ' selected' : '') + '>' + c + '</option>'; }).join('');
+}
+
+/* =====================================================================
+ *  EXCEL: lectura (SheetJS) y escritura institucional (ExcelJS)
+ * ===================================================================== */
+function leerExcel(archivo) {
+  return new Promise(function (res, rej) {
+    const fr = new FileReader();
+    fr.onload = function (e) {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        res(XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' }));
+      } catch (err) { rej(new Error('No se pudo leer el archivo. Verifique que sea Excel (.xlsx o .xls) o CSV.')); }
+    };
+    fr.onerror = function () { rej(new Error('No se pudo leer el archivo.')); };
+    fr.readAsArrayBuffer(archivo);
+  });
+}
+function elegirArchivo() {
+  return new Promise(function (res) {
+    const i = document.createElement('input'); i.type = 'file'; i.accept = '.xlsx,.xls,.csv';
+    i.onchange = function () { res(i.files[0] || null); };
+    i.click();
+  });
+}
+function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, ''); }
+/* Busca la fila de encabezados que contenga la columna indicada */
+function buscarEncabezado(filas, prueba) {
+  for (let i = 0; i < Math.min(filas.length, 15); i++) if (filas[i].some(function (c) { return prueba(norm(c)); })) return i;
+  return -1;
+}
+function descargarBlob(blob, nombre) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+async function guardarLibro(wb, nombre) {
+  const buf = await wb.xlsx.writeBuffer();
+  descargarBlob(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), nombre);
+}
+const XL = {
+  navy: 'FF1F3A5F', gris: 'FFF3F6FA', borde: { style: 'thin', color: { argb: 'FFD5DCE5' } },
+  nivelFondo: { Insuficiente: 'FFFBE9E9', Elemental: 'FFFFF4DC', Adecuado: 'FFE5F6E5' },
+  nivelTexto: { Insuficiente: 'FFA12626', Elemental: 'FF8A5A00', Adecuado: 'FF126B12' }
+};
+/* Encabezado institucional: devuelve la fila donde empieza la tabla */
+function encabezadoInstitucional(ws, titulo, lineas, nCols) {
+  ws.mergeCells(1, 1, 1, Math.max(nCols, 4));
+  ws.getCell(1, 1).value = String(S.cat.colegio).toUpperCase() + ' · UNIDAD TÉCNICO PEDAGÓGICA';
+  ws.getCell(1, 1).font = { bold: true, size: 12, color: { argb: XL.navy } };
+  ws.mergeCells(2, 1, 2, Math.max(nCols, 4));
+  ws.getCell(2, 1).value = titulo;
+  ws.getCell(2, 1).font = { bold: true, size: 14 };
+  let f = 3;
+  lineas.forEach(function (l) { ws.mergeCells(f, 1, f, Math.max(nCols, 4)); ws.getCell(f, 1).value = l; ws.getCell(f, 1).font = { size: 10, color: { argb: 'FF4D5A68' } }; f++; });
+  return f + 1;
+}
+function filaEncabezado(ws, fila, titulos) {
+  const r = ws.getRow(fila);
+  titulos.forEach(function (t, i) {
+    const c = r.getCell(i + 1); c.value = t;
+    c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.navy } };
+    c.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    c.border = { top: XL.borde, bottom: XL.borde, left: XL.borde, right: XL.borde };
+  });
+  r.height = 30;
+}
+function filaDatos(ws, fila, valores, formatos) {
+  const r = ws.getRow(fila);
+  valores.forEach(function (v, i) {
+    const c = r.getCell(i + 1); c.value = v === null || v === undefined ? '' : v;
+    c.border = { top: XL.borde, bottom: XL.borde, left: XL.borde, right: XL.borde };
+    if (formatos && formatos[i]) c.numFmt = formatos[i];
+    if (typeof v === 'number') c.alignment = { horizontal: 'center' };
+  });
+  return r;
+}
+function pintarNivel(celda, nivel) {
+  if (!XL.nivelFondo[nivel]) return;
+  celda.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: XL.nivelFondo[nivel] } };
+  celda.font = { bold: true, color: { argb: XL.nivelTexto[nivel] } };
+  celda.alignment = { horizontal: 'center' };
+}
+
+/* =====================================================================
+ *  INICIO
+ * ===================================================================== */
+async function vInicio() {
+  const d = await api('inicio', {});
+  const r = d.resumen;
+  let h = cabecera('Hola, ' + S.user.nombre.split(' ')[0], 'Resumen de la plataforma' + (S.user.rol === 'docente' ? ' para sus cursos asignados.' : '.'));
+  h += '<div class="kpis">' +
+    '<div class="kpi"><span>Estudiantes</span><b>' + r.estudiantes + '</b><small>matrícula activa</small></div>' +
+    '<div class="kpi"><span>Cursos</span><b>' + r.cursos + '</b><small>' + (S.user.rol === 'docente' ? 'asignados' : 'con matrícula') + '</small></div>' +
+    '<div class="kpi"><span>Evaluaciones</span><b>' + r.evaluaciones + '</b><small>registradas</small></div>' +
+    '<div class="kpi"><span>Cargas realizadas</span><b>' + r.cargas + '</b><small>curso × evaluación</small></div>' +
+    (r.docentes !== undefined ? '<div class="kpi"><span>Docentes activos</span><b>' + r.docentes + '</b><small>con acceso</small></div>' : '') + '</div>';
+
+  if (d.matricesPendientes && d.matricesPendientes.length) {
+    h += '<div class="panel"><h3>Matrices pendientes de validación</h3><div class="sub">Matrices cargadas o modificadas por docentes que requieren revisión de UTP.</div><div class="tabla-cont"><table><thead><tr><th>Evaluación</th><th>Tipo</th><th>Nivel · asignatura</th><th>Editada por</th><th>Fecha</th><th></th></tr></thead><tbody>' +
+      d.matricesPendientes.map(function (m) { return '<tr><td>' + esc(m.nombre) + '</td><td>' + esc(m.tipo) + '</td><td>' + m.nivel + '° · ' + esc(m.asignatura) + '</td><td>' + esc(m.editadaPor) + '</td><td>' + esc(m.editadaEl) + '</td><td><button class="btn mini prim" onclick="ir(\'matriz\',{evalId:\'' + m.id + '\'})">Revisar</button></td></tr>'; }).join('') + '</tbody></table></div></div>';
+  }
+  if (S.user.rol === 'docente') {
+    const pr = d.usuario.permisos || {};
+    h += '<div class="panel"><h3>Sus permisos</h3><div class="leyenda" style="margin:0;font-size:13px">' + [['crearEval', 'Crear evaluaciones'], ['matriz', 'Cargar matrices'], ['respuestas', 'Cargar respuestas y eximir']].map(function (x) {
+      return '<span>' + (pr[x[0]] ? '<span class="chip Adecuado">Habilitado</span>' : '<span class="chip alerta">Bloqueado</span>') + ' ' + x[1] + '</span>'; }).join('') + '</div></div>';
+  }
+  if (S.user.rol === 'docente' && pr_ok(d, 'matriz') && d.matricesPorCompletar && d.matricesPorCompletar.length) {
+    h += '<div class="panel"><h3>Matrices por completar</h3><div class="sub">Evaluaciones de su nivel y asignatura que aún no tienen la matriz completa. Sin matriz no es posible cargar respuestas.</div><div class="tabla-cont"><table><thead><tr><th>Fecha</th><th>Evaluación</th><th>Nivel · asignatura</th><th class="num">Preguntas definidas</th><th></th></tr></thead><tbody>' +
+      d.matricesPorCompletar.map(function (m) { return '<tr><td>' + fechaTxt(m.fecha) + '</td><td>' + esc(m.nombre) + '</td><td>' + m.nivel + '° · ' + esc(m.asignatura) + '</td><td class="num">' + m.definidas + ' de ' + m.total + '</td><td><button class="btn mini prim" onclick="ir(\'matriz\',{evalId:\'' + m.id + '\'})">Cargar matriz</button></td></tr>'; }).join('') + '</tbody></table></div></div>';
+  }
+  h += '<div class="panel"><h3>Avance de carga de respuestas</h3><div class="sub">Últimas evaluaciones. Cobertura = estudiantes con respuestas cargadas ÷ (matrícula − eximidos).</div>';
+  if (!d.avance.length) h += '<div class="vacio">Aún no hay evaluaciones creadas.</div>';
+  else {
+    h += '<div class="tabla-cont"><table><thead><tr><th>Fecha</th><th>Evaluación</th><th>Tipo</th><th>Curso</th><th class="num">Cargados</th><th class="num">Eximidos</th><th style="min-width:180px">Cobertura</th><th></th></tr></thead><tbody>';
+    d.avance.forEach(function (a) {
+      const base = a.matricula - a.eximidos, p = base > 0 ? a.cargados / base * 100 : 0;
+      h += '<tr><td>' + fechaTxt(a.fecha) + '</td><td>' + esc(a.evaluacion) + '<br><small style="color:var(--muted)">' + esc(a.asignatura) + '</small></td><td>' + esc(a.tipo) + '</td><td>' + a.curso + '</td><td class="num">' + a.cargados + ' / ' + a.matricula + '</td><td class="num">' + a.eximidos + '</td><td>' + barra(p) + '</td><td>' +
+        (a.cargados ? '<button class="btn mini" onclick="ir(\'resultados\',{evalId:\'' + a.evalId + '\',curso:\'' + a.curso + '\'})">Ver resultados</button>' :
+          (puedeEditar() ? '<button class="btn mini" onclick="ir(\'carga\',{evalId:\'' + a.evalId + '\',curso:\'' + a.curso + '\'})">Cargar</button>' : '')) + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+  }
+  h += '</div>';
+
+  if (d.accesos) {
+    h += '<div class="panel"><h3>Accesos de usuarios</h3><div class="sub">Último ingreso registrado por cada usuario. Se destacan quienes llevan más de 14 días sin ingresar.</div><div class="tabla-cont"><table><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th>Último ingreso</th><th class="num">Días sin ingresar</th></tr></thead><tbody>';
+    d.accesos.forEach(function (a) {
+      h += '<tr><td>' + esc(a.nombre) + '</td><td>' + esc(a.usuario) + '</td><td>' + esc(ROL_TXT[a.rol] || a.rol) + '</td><td>' + (a.activo === 'SI' ? '<span class="chip Adecuado">Activo</span>' : '<span class="chip neutro">Inactivo</span>') + '</td><td>' + (a.ultimoIngreso || '<span style="color:var(--muted)">Nunca</span>') + '</td><td class="num">' + (a.dias === null ? '—' : (a.dias > 14 ? '<span class="chip alerta">' + a.dias + '</span>' : a.dias)) + '</td></tr>';
+    });
+    h += '</tbody></table></div></div>';
+  }
+  $('principal').innerHTML = h;
+}
+
+/* =====================================================================
+ *  ESTUDIANTES
+ * ===================================================================== */
+async function vEstudiantes(p) {
+  const curso = p.curso || '';
+  const lista = await api('listarEstudiantes', { curso: curso, inactivos: !!p.inactivos });
+  const acc = esAdmin() ? '<button class="btn" onclick="plantillaEstudiantes()">Descargar plantilla</button><button class="btn" onclick="importarEstudiantes()">Importar desde Excel</button><button class="btn prim" onclick="editarEstudiante()">+ Estudiante</button>' : '';
+  let h = cabecera('Estudiantes', 'Matrícula de 1° a 8° básico' + (S.user.rol === 'docente' ? ' de sus cursos asignados.' : '.'), acc);
+  h += '<div class="filtros"><div><label>Curso</label><select id="f-curso" onchange="ir(\'estudiantes\',{curso:this.value,inactivos:' + !!p.inactivos + '})"><option value="">Todos</option>' + opcionesCurso(S.cat.todosLosCursos || S.cat.cursos, curso) + '</select></div>' +
+    '<div><label>Buscar</label><input id="f-buscar" placeholder="Nombre o RUT" oninput="filtrarTabla(\'t-est\',this.value)"></div>' +
+    (esAdmin() ? '<div style="min-width:auto"><label>&nbsp;</label><button class="btn" onclick="ir(\'estudiantes\',{curso:\'' + curso + '\',inactivos:' + !p.inactivos + '})">' + (p.inactivos ? 'Ocultar retirados' : 'Mostrar retirados') + '</button></div>' : '') + '</div>';
+  const porCurso = {};
+  lista.forEach(function (e) { porCurso[e.curso] = (porCurso[e.curso] || 0) + 1; });
+  h += '<div class="panel"><div class="sub" style="margin:0 0 10px">' + lista.length + ' estudiantes · ' + Object.keys(porCurso).length + ' cursos · ' + lista.filter(function (e) { return e.pie === 'SI'; }).length + ' en PIE</div>';
+  h += lista.length ? '<div class="tabla-cont" style="max-height:62vh"><table id="t-est"><thead><tr><th class="num">N°</th><th>RUT</th><th>Nombre</th><th>Curso</th><th class="cen">PIE</th><th>Estado</th>' + (esAdmin() ? '<th></th>' : '') + '</tr></thead><tbody>' +
+    lista.map(function (e, i) {
+      return '<tr><td class="num">' + (i + 1) + '</td><td>' + e.rut + '</td><td>' + esc(e.nombre) + '</td><td>' + e.curso + '</td><td class="cen">' + (e.pie === 'SI' ? '<span class="chip neutro">PIE</span>' : '') + '</td><td>' + (e.activo === 'SI' ? 'Activo' : '<span class="chip neutro">Retirado</span>') + '</td>' +
+        (esAdmin() ? '<td><button class="btn mini" onclick=\'editarEstudiante(' + JSON.stringify(e).replace(/'/g, '&#39;') + ')\'>Editar</button></td>' : '') + '</tr>';
+    }).join('') + '</tbody></table></div>' : '<div class="vacio">No hay estudiantes registrados. ' + (esAdmin() ? 'Descargue la plantilla e impórtela.' : '') + '</div>';
+  h += '</div>';
+  $('principal').innerHTML = h;
+}
+function filtrarTabla(id, q) {
+  const t = $(id); if (!t) return; q = norm(q);
+  t.querySelectorAll('tbody tr').forEach(function (tr) { tr.style.display = !q || norm(tr.textContent).indexOf(q) >= 0 ? '' : 'none'; });
+}
+function editarEstudiante(e) {
+  e = e || { rut: '', nombre: '', curso: '', pie: 'NO', activo: 'SI' };
+  modal(e.rut ? 'Editar estudiante' : 'Nuevo estudiante',
+    '<div class="form"><div><label>RUT (sin puntos, con guion)</label><input id="e-rut" value="' + esc(e.rut) + '"' + (e.rut ? ' disabled' : '') + ' placeholder="23456789-0"></div>' +
+    '<div><label>Curso</label><input id="e-curso" value="' + esc(e.curso) + '" placeholder="4°A"></div>' +
+    '<div class="full"><label>Nombre completo</label><input id="e-nombre" value="' + esc(e.nombre) + '"></div>' +
+    '<div><label>Programa de Integración Escolar</label><select id="e-pie"><option value="NO">No</option><option value="SI"' + (e.pie === 'SI' ? ' selected' : '') + '>Sí (PIE)</option></select></div>' +
+    '<div><label>Estado</label><select id="e-activo"><option value="SI">Activo</option><option value="NO"' + (e.activo === 'NO' ? ' selected' : '') + '>Retirado</option></select></div></div>',
+    '<button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn prim" id="e-guardar">Guardar</button>');
+  $('e-guardar').onclick = async function () {
+    try {
+      await api('guardarEstudiante', { rut: $('e-rut').value, nombre: $('e-nombre').value, curso: $('e-curso').value, pie: $('e-pie').value, activo: $('e-activo').value });
+      cerrarModal(); toast('Estudiante guardado.', 'ok'); S.cat = await api('catalogos', {}, true); ir('estudiantes');
+    } catch (err) { errorToast(err); }
+  };
+}
+async function plantillaEstudiantes() {
+  const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Matrícula');
+  ws.columns = [{ width: 16 }, { width: 40 }, { width: 10 }, { width: 8 }];
+  filaEncabezado(ws, 1, ['RUT', 'Nombre', 'Curso', 'PIE']);
+  filaDatos(ws, 2, ['23456789-0', 'Apellido Apellido Nombre (ejemplo: borrar)', '4°A', 'NO']);
+  ws.getCell('F1').value = 'Instrucciones: RUT sin puntos y con guion · Curso en formato 4°A · PIE: SI o NO. Borre la fila de ejemplo.';
+  await guardarLibro(wb, 'Plantilla_Matricula.xlsx');
+}
+async function importarEstudiantes() {
+  const f = await elegirArchivo(); if (!f) return;
+  try {
+    const filas = await leerExcel(f);
+    const hi = buscarEncabezado(filas, function (c) { return c === 'rut'; });
+    if (hi < 0) throw new Error('No se encontró la columna "RUT" en el archivo.');
+    const enc = filas[hi].map(norm);
+    const col = function (pred) { return enc.findIndex(pred); };
+    const cR = col(function (c) { return c === 'rut'; }), cN = col(function (c) { return c.indexOf('nombre') === 0; }), cC = col(function (c) { return c === 'curso'; }), cP = col(function (c) { return c === 'pie'; });
+    if (cN < 0 || cC < 0) throw new Error('El archivo debe tener las columnas RUT, Nombre y Curso.');
+    const datos = filas.slice(hi + 1).filter(function (r) { return r.join('').trim(); }).map(function (r) { return { rut: r[cR], nombre: r[cN], curso: r[cC], pie: cP >= 0 ? r[cP] : '' }; });
+    const v = await api('importarEstudiantes', { filas: datos, soloValidar: true });
+    let cuerpo = '<p>Se encontraron <b>' + v.validos + '</b> estudiantes válidos en <b>' + esc(f.name) + '</b>.</p>';
+    if (v.errores.length) cuerpo += '<div class="aviso error"><b>' + v.errores.length + ' fila(s) con errores no se importarán:</b><ul>' + v.errores.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    if (v.advertencias.length) cuerpo += '<div class="aviso advertencia"><b>Advertencias:</b><ul>' + v.advertencias.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    cuerpo += '<p>Los estudiantes existentes (mismo RUT) se actualizan con el curso y nombre del archivo; si cambió el curso, se registra como traslado.</p><label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="i-retirar"> Marcar como retirados a los estudiantes de estos cursos que no aparecen en el archivo</label>';
+    modal('Importar matrícula', cuerpo, '<button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn prim" id="i-ok"' + (v.validos ? '' : ' disabled') + '>Importar ' + v.validos + ' estudiantes</button>');
+    $('i-ok').onclick = async function () {
+      const retirar = $('i-retirar').checked; cerrarModal();
+      try {
+        const r = await api('importarEstudiantes', { filas: datos, retirarAusentes: retirar });
+        toast('Matrícula importada: ' + r.creados + ' nuevos, ' + r.actualizados + ' actualizados (' + r.traslados + ' traslados), ' + r.retirados + ' retirados.', 'ok');
+        S.cat = await api('catalogos', {}, true); ir('estudiantes');
+      } catch (e) { errorToast(e); }
+    };
+  } catch (e) { errorToast(e); }
+}
+
+/* =====================================================================
+ *  EVALUACIONES Y MATRIZ
+ * ===================================================================== */
+async function vEvaluaciones(p) {
+  await refrescarPermisos();
+  const lista = await evaluaciones(true);
+  const acc = perm('crearEval') ? '<button class="btn prim" onclick="editarEvaluacion()">+ Nueva evaluación</button>' : '';
+  let h = cabecera('Evaluaciones y matriz', 'Diagnósticos, evaluaciones mensuales, semestrales y ensayos SIMCE. La matriz define clave, OA, indicador y habilidad de cada pregunta.' + (S.user.rol === 'docente' ? ' Usted puede cargar y editar las matrices de su nivel y asignatura hasta que UTP las valide.' : ''), acc);
+  h += '<div class="filtros"><div><label>Tipo</label><select id="fe-tipo"><option value="">Todos</option>' + S.cat.tipos.map(function (t) { return '<option>' + t + '</option>'; }).join('') + '</select></div>' +
+    '<div><label>Asignatura</label><select id="fe-asig"><option value="">Todas</option>' + S.cat.asignaturas.map(function (t) { return '<option>' + esc(t) + '</option>'; }).join('') + '</select></div>' +
+    '<div><label>Nivel</label><select id="fe-nivel"><option value="">Todos</option>' + [1, 2, 3, 4, 5, 6, 7, 8].map(function (n) { return '<option value="' + n + '">' + n + '° básico</option>'; }).join('') + '</select></div></div>';
+  h += '<div class="panel" id="p-evals"></div>';
+  $('principal').innerHTML = h;
+  function pintar() {
+    const t = $('fe-tipo').value, a = $('fe-asig').value, n = $('fe-nivel').value;
+    const f = lista.filter(function (e) { return (!t || e.tipo === t) && (!a || e.asignatura === a) && (!n || String(e.nivel) === n); });
+    $('p-evals').innerHTML = f.length ? '<div class="tabla-cont"><table><thead><tr><th>Fecha</th><th>Nombre</th><th>Tipo</th><th>Asignatura</th><th class="cen">Nivel</th><th class="num">Preguntas</th><th>Matriz</th><th></th></tr></thead><tbody>' + f.map(function (e) {
+      return '<tr><td>' + fechaTxt(e.fecha) + '</td><td><b>' + esc(e.nombre) + '</b>' + (e.descripcion ? '<br><small style="color:var(--muted)">' + esc(e.descripcion) + '</small>' : '') + '</td><td>' + esc(e.tipo) + '</td><td>' + esc(e.asignatura) + '</td><td class="cen">' + e.nivel + '°</td><td class="num">' + e.numPreguntas + '</td><td>' +
+        estadoMatrizChip(e) + (e.matrizEditadaPor ? '<br><small style="color:var(--muted)">Editada por ' + esc(e.matrizEditadaPor) + '</small>' : '') + '</td><td style="white-space:nowrap">' +
+        '<button class="btn mini' + (e.puedeEditarMatriz && !e.matrizCompleta ? ' prim' : '') + '" onclick="ir(\'matriz\',{evalId:\'' + e.id + '\'})">' + (e.puedeEditarMatriz ? (e.matrizCompleta ? 'Editar matriz' : 'Cargar matriz') : 'Ver matriz') + '</button> ' +
+        (esAdmin() || (e.propia && perm('crearEval')) ? '<button class="btn mini" onclick=\'editarEvaluacion(' + JSON.stringify(e).replace(/'/g, '&#39;') + ')\'>Editar</button> <button class="btn mini peligro" onclick="eliminarEvaluacion(\'' + e.id + '\')">Eliminar</button>' : '') + '</td></tr>';
+    }).join('') + '</tbody></table></div>' : '<div class="vacio">No hay evaluaciones con estos filtros.</div>';
+  }
+  ['fe-tipo', 'fe-asig', 'fe-nivel'].forEach(function (i) { $(i).onchange = pintar; });
+  pintar();
+}
+function editarEvaluacion(e) {
+  let asigs = S.cat.asignaturas, niveles = [1, 2, 3, 4, 5, 6, 7, 8];
+  if (S.user.rol === 'docente') {
+    const a = S.user.asignaciones;
+    asigs = a.some(function (x) { return x.asignatura === '*'; }) ? S.cat.asignaturas : S.cat.asignaturas.filter(function (s) { return a.some(function (x) { return x.asignatura === s; }); });
+    niveles = niveles.filter(function (n) { return a.some(function (x) { return Number(x.curso.charAt(0)) === n; }); });
+  }
+  e = e || { nombre: '', tipo: 'Mensual', asignatura: asigs[0], nivel: niveles[0], fecha: hoyISO(), numPreguntas: 40, descripcion: '' };
+  modal(e.id ? 'Editar evaluación' : 'Nueva evaluación',
+    '<div class="form"><div class="full"><label>Nombre</label><input id="ev-nombre" value="' + esc(e.nombre) + '" placeholder="Ej.: Ensayo SIMCE N°2 Lectura"></div>' +
+    '<div><label>Tipo</label><select id="ev-tipo">' + S.cat.tipos.map(function (t) { return '<option' + (t === e.tipo ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></div>' +
+    '<div><label>Asignatura</label><select id="ev-asig">' + asigs.map(function (t) { return '<option' + (t === e.asignatura ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select></div>' +
+    '<div><label>Nivel</label><select id="ev-nivel">' + niveles.map(function (n) { return '<option value="' + n + '"' + (n === Number(e.nivel) ? ' selected' : '') + '>' + n + '° básico</option>'; }).join('') + '</select></div>' +
+    '<div><label>Fecha de aplicación</label><input id="ev-fecha" type="date" value="' + esc(e.fecha) + '"></div>' +
+    '<div><label>N° de preguntas (máx. ' + S.cat.config.maxPreguntas + ')</label><input id="ev-num" type="number" min="1" max="' + S.cat.config.maxPreguntas + '" value="' + e.numPreguntas + '"></div>' +
+    '<div class="full"><label>Descripción (opcional)</label><input id="ev-desc" value="' + esc(e.descripcion) + '" placeholder="Unidad, forma, observaciones"></div></div>' +
+    '<div class="aviso" style="margin-top:14px">Se aplica a todos los cursos del nivel. Tras guardar, defina la matriz de evaluación (clave, OA, indicador y habilidad por pregunta).</div>',
+    '<button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn prim" id="ev-guardar">Guardar</button>');
+  $('ev-guardar').onclick = async function () {
+    try {
+      const r = await api('guardarEvaluacion', { id: e.id, nombre: $('ev-nombre').value, tipo: $('ev-tipo').value, asignatura: $('ev-asig').value, nivel: $('ev-nivel').value, fecha: $('ev-fecha').value, numPreguntas: $('ev-num').value, descripcion: $('ev-desc').value });
+      cerrarModal(); toast('Evaluación guardada.', 'ok');
+      if (!e.id) ir('matriz', { evalId: r.id }); else ir('evaluaciones');
+    } catch (err) { errorToast(err); }
+  };
+}
+async function eliminarEvaluacion(id) {
+  const ev = S.cache.evals.find(function (e) { return e.id === id; });
+  if (!esAdmin()) {
+    if (!await confirmar('Eliminar evaluación', 'Se eliminará <b>' + esc(ev.nombre) + '</b> y su matriz. Solo es posible si aún no tiene respuestas cargadas.', 'Eliminar')) return;
+    try { await api('eliminarEvaluacion', { id: id }); toast('Evaluación eliminada.', 'ok'); ir('evaluaciones'); } catch (e) { errorToast(e); }
+    return;
+  }
+  if (!await confirmar('Eliminar evaluación', 'Se eliminará <b>' + esc(ev.nombre) + '</b>, su matriz y <b>todas las respuestas cargadas</b> de todos los cursos. Esta acción no se puede deshacer.', 'Eliminar definitivamente')) return;
+  try { await api('eliminarEvaluacion', { id: id }); toast('Evaluación eliminada.', 'ok'); ir('evaluaciones'); } catch (e) { errorToast(e); }
+}
+
+function estadoMatrizChip(e) {
+  if (!e.matrizCompleta) return '<span class="chip Elemental">Incompleta · ' + e.preguntasDefinidas + ' de ' + e.numPreguntas + '</span>';
+  return e.estadoMatriz === 'Validada' ? '<span class="chip Adecuado">Validada por UTP</span>' : '<span class="chip neutro">Completa · sin validar</span>';
+}
+const HABILIDADES_SUGERIDAS = {
+  'Lenguaje y Comunicación': ['Localizar', 'Interpretar y relacionar', 'Reflexionar'],
+  'Matemática': ['Conocer', 'Aplicar', 'Razonar'],
+  'Ciencias Naturales': ['Reconocer', 'Comprender', 'Analizar', 'Aplicar', 'Evaluar'],
+  'Historia, Geografía y Ciencias Sociales': ['Pensamiento temporal y espacial', 'Análisis y trabajo con fuentes', 'Pensamiento crítico', 'Comunicación']
+};
+async function vMatriz(p) {
+  await refrescarPermisos();
+  const d = await api('obtenerMatriz', { evalId: p.evalId });
+  const ev = d.evaluacion, editable = d.puedeEditar;
+  S.cache.matrizEditable = editable;
+  const completa = d.matriz.length === ev.numPreguntas, validada = ev.estadoMatriz === 'Validada';
+  const m = {}; d.matriz.forEach(function (x) { m[x.pregunta] = x; });
+  const sug = HABILIDADES_SUGERIDAS[ev.asignatura] || [];
+  let h = cabecera('Matriz de evaluación', esc(ev.nombre) + ' · ' + esc(ev.tipo) + ' · ' + ev.nivel + '° básico · ' + esc(ev.asignatura) + ' · ' + ev.numPreguntas + ' preguntas',
+    '<button class="btn" onclick="ir(\'evaluaciones\')">← Volver</button>' +
+    (esAdmin() && completa ? (validada ? '<button class="btn" onclick="validarMatriz(\'' + ev.id + '\',false)">Desbloquear para docentes</button>' : '<button class="btn" onclick="validarMatriz(\'' + ev.id + '\',true)">Validar matriz</button>') : '') +
+    (editable ? '<button class="btn" onclick="plantillaMatriz(\'' + ev.id + '\')">Descargar plantilla</button><button class="btn" onclick="importarMatriz()">Importar desde Excel</button><button class="btn prim" onclick="guardarMatriz(\'' + ev.id + '\')">Guardar matriz</button>' : ''));
+  if (S.user.rol === 'docente' && !validada && !perm('matriz')) h += '<div class="aviso error">UTP tiene bloqueada la carga de matrices para su usuario o para todos los docentes. Puede consultar la matriz en modo lectura.</div>';
+  if (validada) h += '<div class="aviso" style="background:var(--adec-bg);color:#126b12"><b>Matriz validada por UTP</b> (' + esc(ev.validadoPor) + ' · ' + esc(ev.validadoEl) + ').' + (esAdmin() ? ' Los docentes ya no pueden modificarla; usted puede editarla o desbloquearla.' : ' Está bloqueada: para corregirla, solicite a UTP que la desbloquee.') + '</div>';
+  else if (completa) h += '<div class="aviso advertencia"><b>Matriz completa, pendiente de validación por UTP.</b>' + (ev.matrizEditadaPor ? ' Última edición: ' + esc(ev.matrizEditadaPor) + ' · ' + esc(ev.matrizEditadaEl) + '.' : '') + (esAdmin() ? ' Revise clave, OA, indicador y habilidad de cada pregunta y presione «Validar matriz».' : ' Los resultados se informarán como preliminares hasta su validación.') + '</div>';
+  h += '<div class="aviso">SM = selección múltiple (1 punto, clave A–D). AB = pregunta abierta (máximo ' + S.cat.config.maxAbiertas + ' por evaluación, puntaje máximo de 1 a 4). El OA, el indicador y la habilidad se registran tal como aparecen en su tabla de especificaciones: la plataforma no los modifica ni infiere.</div>';
+  h += '<div id="m-errores"></div><div class="panel"><div class="tabla-cont" style="max-height:66vh"><table class="matriz"><thead><tr><th>P</th><th style="width:70px">Tipo</th><th style="width:70px">Clave</th><th style="width:70px">Puntaje</th><th style="width:110px">OA</th><th>Indicador de evaluación</th><th style="width:190px">Habilidad</th><th style="width:150px">Eje / unidad</th></tr></thead><tbody>';
+  for (let i = 1; i <= ev.numPreguntas; i++) {
+    const x = m[i] || { tipo: 'SM', clave: '', puntaje: 1, oa: '', indicador: '', habilidad: '', eje: '' };
+    const dis = editable ? '' : ' disabled';
+    h += '<tr data-p="' + i + '"><td>' + i + '</td><td><select class="m-tipo"' + dis + '><option value="SM">SM</option><option value="AB"' + (x.tipo === 'AB' ? ' selected' : '') + '>AB</option></select></td>' +
+      '<td><select class="m-clave"' + dis + '><option value=""></option>' + ['A', 'B', 'C', 'D'].map(function (l) { return '<option' + (x.clave === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '</select></td>' +
+      '<td><select class="m-puntaje"' + dis + '>' + [1, 2, 3, 4].map(function (n) { return '<option' + (Number(x.puntaje) === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></td>' +
+      '<td><input class="m-oa" value="' + esc(x.oa) + '" placeholder="OA 4"' + dis + '></td><td><input class="m-ind" value="' + esc(x.indicador) + '"' + dis + '></td>' +
+      '<td><input class="m-hab" list="dl-hab" value="' + esc(x.habilidad) + '"' + dis + '></td><td><input class="m-eje" value="' + esc(x.eje) + '"' + dis + '></td></tr>';
+  }
+  h += '</tbody></table></div><datalist id="dl-hab">' + sug.map(function (s) { return '<option value="' + esc(s) + '">'; }).join('') + '</datalist></div>';
+  $('principal').innerHTML = h;
+  document.querySelectorAll('.matriz tbody tr').forEach(ajustarFilaMatriz);
+  document.querySelectorAll('.m-tipo').forEach(function (s) { s.onchange = function () { ajustarFilaMatriz(s.closest('tr')); }; });
+}
+function ajustarFilaMatriz(tr) {
+  const ab = tr.querySelector('.m-tipo').value === 'AB';
+  tr.querySelector('.m-clave').disabled = ab || !S.cache.matrizEditable;
+  tr.querySelector('.m-puntaje').disabled = !ab || !S.cache.matrizEditable;
+  if (ab) tr.querySelector('.m-clave').value = ''; else tr.querySelector('.m-puntaje').value = '1';
+}
+function leerMatrizTabla() {
+  return Array.from(document.querySelectorAll('.matriz tbody tr')).map(function (tr) {
+    return { pregunta: Number(tr.dataset.p), tipo: tr.querySelector('.m-tipo').value, clave: tr.querySelector('.m-clave').value, puntaje: tr.querySelector('.m-puntaje').value,
+      oa: tr.querySelector('.m-oa').value, indicador: tr.querySelector('.m-ind').value, habilidad: tr.querySelector('.m-hab').value, eje: tr.querySelector('.m-eje').value };
+  });
+}
+async function guardarMatriz(evalId, confirmado) {
+  try {
+    const r = await api('guardarMatriz', { evalId: evalId, items: leerMatrizTabla(), confirmarConRespuestas: !!confirmado });
+    if (r.ok) { $('m-errores').innerHTML = ''; toast('Matriz guardada correctamente.' + (esAdmin() ? '' : ' Queda pendiente de validación por UTP.'), 'ok'); S.cache.evals = null; ir('matriz', { evalId: evalId }); return; }
+    if (r.requiereConfirmacion) {
+      if (await confirmar('Matriz con respuestas cargadas', esc(r.errores[0]), 'Guardar y recalcular')) guardarMatriz(evalId, true);
+      return;
+    }
+    $('m-errores').innerHTML = '<div class="aviso error"><b>La matriz tiene ' + r.errores.length + ' observación(es). Corrija antes de guardar:</b><ul>' + r.errores.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    window.scrollTo(0, 0);
+  } catch (e) { errorToast(e); }
+}
+async function validarMatriz(evalId, validar) {
+  const ok = await confirmar(validar ? 'Validar matriz' : 'Desbloquear matriz', validar ? 'Confirma que revisó la clave, el OA, el indicador y la habilidad de cada pregunta. Una vez validada, los docentes no podrán modificarla.' : 'Los docentes del nivel y asignatura podrán volver a modificar la matriz. La validación anterior se anula.', validar ? 'Validar' : 'Desbloquear');
+  if (!ok) return;
+  try { await api('validarMatriz', { evalId: evalId, validar: validar }); toast(validar ? 'Matriz validada.' : 'Matriz desbloqueada.', 'ok'); S.cache.evals = null; ir('matriz', { evalId: evalId }); } catch (e) { errorToast(e); }
+}
+async function plantillaMatriz(evalId) {
+  const ev = ((await evaluaciones()) || []).find(function (e) { return e.id === evalId; }) || {};
+  const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Matriz');
+  ws.columns = [{ width: 10 }, { width: 10 }, { width: 9 }, { width: 9 }, { width: 12 }, { width: 50 }, { width: 24 }, { width: 22 }];
+  const ini = encabezadoInstitucional(ws, 'Matriz de evaluación · ' + (ev.nombre || ''), ['Tipo: SM (selección múltiple) o AB (abierta). Clave: A, B, C o D (solo SM). Puntaje: 1 a 4 (solo AB). OA, indicador y habilidad según la tabla de especificaciones.'], 8);
+  filaEncabezado(ws, ini, ['Pregunta', 'Tipo', 'Clave', 'Puntaje', 'OA', 'Indicador', 'Habilidad', 'Eje']);
+  const actual = leerMatrizTabla();
+  for (let i = 0; i < (ev.numPreguntas || actual.length); i++) {
+    const x = actual[i] || {};
+    filaDatos(ws, ini + 1 + i, [i + 1, x.tipo || 'SM', x.clave || '', x.tipo === 'AB' ? Number(x.puntaje) : '', x.oa || '', x.indicador || '', x.habilidad || '', x.eje || '']);
+    ws.getCell(ini + 1 + i, 2).dataValidation = { type: 'list', allowBlank: false, formulae: ['"SM,AB"'] };
+    ws.getCell(ini + 1 + i, 3).dataValidation = { type: 'list', allowBlank: true, formulae: ['"A,B,C,D"'] };
+    ws.getCell(ini + 1 + i, 4).dataValidation = { type: 'list', allowBlank: true, formulae: ['"1,2,3,4"'] };
+  }
+  await guardarLibro(wb, 'Matriz_' + nombreArchivo(ev.nombre || 'evaluacion') + '.xlsx');
+}
+async function importarMatriz() {
+  const f = await elegirArchivo(); if (!f) return;
+  try {
+    const filas = await leerExcel(f);
+    const hi = buscarEncabezado(filas, function (c) { return c === 'pregunta' || c === 'n' || c === 'item'; });
+    if (hi < 0) throw new Error('No se encontró la columna "Pregunta" en el archivo.');
+    const enc = filas[hi].map(norm);
+    const col = function (nombres) { return enc.findIndex(function (c) { return nombres.some(function (n) { return c.indexOf(n) === 0; }); }); };
+    const c = { p: col(['pregunta', 'item']), t: col(['tipo']), k: col(['clave', 'alternativa', 'respuesta']), pt: col(['puntaje']), oa: col(['oa', 'objetivo']), ind: col(['indicador']), hab: col(['habilidad']), eje: col(['eje', 'unidad']) };
+    let n = 0;
+    filas.slice(hi + 1).forEach(function (r) {
+      const p = parseInt(r[c.p], 10); const tr = document.querySelector('.matriz tbody tr[data-p="' + p + '"]'); if (!tr) return;
+      const tipo = c.t >= 0 && String(r[c.t]).trim().toUpperCase().indexOf('AB') === 0 ? 'AB' : 'SM';
+      tr.querySelector('.m-tipo').value = tipo; ajustarFilaMatriz(tr);
+      if (tipo === 'SM' && c.k >= 0) tr.querySelector('.m-clave').value = String(r[c.k]).trim().toUpperCase();
+      if (tipo === 'AB' && c.pt >= 0 && r[c.pt]) tr.querySelector('.m-puntaje').value = String(parseInt(r[c.pt], 10));
+      if (c.oa >= 0) tr.querySelector('.m-oa').value = String(r[c.oa]).trim();
+      if (c.ind >= 0) tr.querySelector('.m-ind').value = String(r[c.ind]).trim();
+      if (c.hab >= 0) tr.querySelector('.m-hab').value = String(r[c.hab]).trim();
+      if (c.eje >= 0) tr.querySelector('.m-eje').value = String(r[c.eje]).trim();
+      n++;
+    });
+    toast(n + ' preguntas importadas. Revise y presione "Guardar matriz".', 'ok');
+  } catch (e) { errorToast(e); }
+}
+
+/* =====================================================================
+ *  CARGA DE RESPUESTAS Y EXIMICIÓN
+ * ===================================================================== */
+async function vCarga(p) {
+  await refrescarPermisos();
+  const lista = (await evaluaciones(true)).filter(function (e) { return cursosPara(e).length; });
+  let h = cabecera('Carga de respuestas y eximición', 'Suba la planilla Excel del curso (RUT, nombre, P1…Pn con alternativas A–D; preguntas abiertas con su puntaje). Puede volver a subirla: los datos se reemplazan sin duplicar.');
+  h += '<div class="filtros"><div style="flex:1;min-width:280px"><label>Evaluación</label><select id="c-eval">' + opcionesEval(lista, p.evalId) + '</select></div><div><label>Curso</label><select id="c-curso"></select></div></div><div id="c-cuerpo"></div>';
+  $('principal').innerHTML = h;
+  const selE = $('c-eval'), selC = $('c-curso');
+  function cursos() { const ev = lista.find(function (e) { return e.id === selE.value; }); selC.innerHTML = opcionesCurso(cursosPara(ev), p.curso); }
+  selE.onchange = function () { p.curso = null; cursos(); cargarPanel(); };
+  selC.onchange = cargarPanel;
+  cursos(); cargarPanel();
+}
+async function cargarPanel() {
+  const evalId = $('c-eval').value, curso = $('c-curso').value, cont = $('c-cuerpo');
+  if (!evalId || !curso) { cont.innerHTML = '<div class="panel vacio">Seleccione una evaluación y un curso.</div>'; return; }
+  try {
+    const d = await api('datosCarga', { evalId: evalId, curso: curso });
+    S.cache.carga = d;
+    const completa = d.matriz.length === d.evaluacion.numPreguntas;
+    const cargados = d.estudiantes.filter(function (e) { return e.cargado && !e.eximido; }).length, exim = d.estudiantes.filter(function (e) { return e.eximido; }).length;
+    let h = '';
+    const bloq = !perm('respuestas');
+    if (bloq) h += '<div class="aviso error"><b>Carga bloqueada:</b> UTP tiene bloqueada la carga de respuestas y la eximición para su usuario o para todos los docentes. Puede revisar el estado del curso, pero no modificarlo.</div>';
+    if (!completa) h += '<div class="aviso error">La matriz de esta evaluación está incompleta (' + d.matriz.length + ' de ' + d.evaluacion.numPreguntas + ' preguntas). Debe completarse en «Evaluaciones y matriz» antes de cargar respuestas.</div>';
+    h += '<div class="kpis"><div class="kpi"><span>Matrícula</span><b>' + d.estudiantes.length + '</b></div><div class="kpi"><span>Con respuestas</span><b>' + cargados + '</b></div><div class="kpi"><span>Eximidos</span><b>' + exim + '</b></div><div class="kpi"><span>Sin registro</span><b>' + (d.estudiantes.length - cargados - exim) + '</b></div></div>';
+    h += '<div class="panel"><div class="cabecera" style="margin-bottom:12px"><div><h3>' + esc(d.evaluacion.nombre) + ' · ' + curso + '</h3><p style="font-size:13px">' + d.evaluacion.numPreguntas + ' preguntas · ' + d.matriz.filter(function (m) { return m.tipo === 'AB'; }).length + ' abiertas</p></div><div class="acciones">' +
+      '<button class="btn" onclick="plantillaRespuestas()"' + (completa ? '' : ' disabled') + '>Descargar planilla del curso</button><button class="btn prim" onclick="subirRespuestas()"' + (completa && !bloq ? '' : ' disabled') + '>Subir planilla Excel</button>' +
+      (esAdmin() && cargados ? '<button class="btn peligro" onclick="borrarRespuestas()">Borrar respuestas del curso</button>' : '') + '</div></div>';
+    h += '<div class="tabla-cont" style="max-height:60vh"><table><thead><tr><th class="num">N°</th><th>RUT</th><th>Nombre</th><th>Estado</th><th>Cargado por</th><th>Actualizado</th><th>Eximición</th></tr></thead><tbody>' +
+      d.estudiantes.map(function (e, i) {
+        const est = e.eximido ? '<span class="chip neutro">Eximido</span> <small style="color:var(--muted)">' + esc(e.motivo) + '</small>' : (e.cargado ? '<span class="chip Adecuado">Cargado</span>' : '<span class="chip Elemental">Sin registro</span>');
+        return '<tr><td class="num">' + (i + 1) + '</td><td>' + e.rut + '</td><td>' + esc(e.nombre) + (e.pie === 'SI' ? '<span class="marca-pie">PIE</span>' : '') + '</td><td>' + est + '</td><td>' + esc(e.cargadoPor || '—') + '</td><td>' + esc(e.actualizado || '—') + '</td><td>' +
+          (bloq ? '—' : (e.eximido ? '<button class="btn mini" onclick="eximirEst(\'' + e.rut + '\',false)">Revertir</button>' : '<button class="btn mini" onclick="eximirEst(\'' + e.rut + '\',true)">Eximir</button>')) + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+    cont.innerHTML = h;
+  } catch (e) { cont.innerHTML = '<div class="aviso error">' + esc(e.message) + '</div>'; }
+}
+async function plantillaRespuestas() {
+  const d = S.cache.carga, ev = d.evaluacion, curso = $('c-curso').value;
+  const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Respuestas');
+  const n = ev.numPreguntas;
+  ws.columns = [{ width: 38 }, { width: 14 }].concat(Array.from({ length: n }, function () { return { width: 5 }; }));
+  const ini = encabezadoInstitucional(ws, 'Planilla de respuestas · ' + ev.nombre, ['Curso: ' + curso + ' · ' + ev.asignatura + ' · Fecha: ' + fechaTxt(ev.fecha), 'Selección múltiple: A, B, C o D (vacío = omitida). Preguntas abiertas (sombreadas): puntaje obtenido según rúbrica. No modifique las columnas Nombre y RUT.'], 2 + n);
+  filaEncabezado(ws, ini, ['Nombre', 'RUT'].concat(Array.from({ length: n }, function (_, i) { return 'P' + (i + 1); })));
+  d.estudiantes.filter(function (e) { return !e.eximido; }).forEach(function (e, k) {
+    const fila = ini + 1 + k;
+    filaDatos(ws, fila, [e.nombre, e.rut].concat(Array.from({ length: n }, function () { return ''; })));
+    d.matriz.forEach(function (m) {
+      const c = ws.getCell(fila, 2 + m.pregunta);
+      c.alignment = { horizontal: 'center' };
+      if (m.tipo === 'AB') {
+        c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF4DC' } };
+        c.dataValidation = { type: 'whole', operator: 'between', allowBlank: true, formulae: [0, m.puntaje], showErrorMessage: true, error: 'Puntaje entre 0 y ' + m.puntaje };
+      } else c.dataValidation = { type: 'list', allowBlank: true, formulae: ['"A,B,C,D"'], showErrorMessage: true, error: 'Ingrese A, B, C o D' };
+    });
+  });
+  d.matriz.filter(function (m) { return m.tipo === 'AB'; }).forEach(function (m) { ws.getCell(ini, 2 + m.pregunta).value = 'P' + m.pregunta + ' (0-' + m.puntaje + ')'; });
+  ws.views = [{ state: 'frozen', xSplit: 2, ySplit: ini }];
+  await guardarLibro(wb, 'Respuestas_' + nombreArchivo(ev.nombre) + '_' + nombreArchivo(curso) + '.xlsx');
+}
+async function subirRespuestas() {
+  const f = await elegirArchivo(); if (!f) return;
+  const evalId = $('c-eval').value, curso = $('c-curso').value;
+  try {
+    const filas = await leerExcel(f);
+    const hi = buscarEncabezado(filas, function (c) { return c === 'rut'; });
+    if (hi < 0) throw new Error('No se encontró la columna "RUT" en la planilla.');
+    const enc = filas[hi];
+    const cR = enc.findIndex(function (c) { return norm(c) === 'rut'; });
+    const cN = enc.findIndex(function (c) { return norm(c).indexOf('nombre') === 0; });
+    const cols = {};
+    enc.forEach(function (c, i) { const m = /^\s*p\s*(\d+)/i.exec(String(c)); if (m) cols[Number(m[1])] = i; });
+    const nP = S.cache.carga.evaluacion.numPreguntas;
+    const faltan = []; for (let q = 1; q <= nP; q++) if (cols[q] === undefined) faltan.push('P' + q);
+    if (faltan.length) throw new Error('La planilla no tiene las columnas: ' + faltan.slice(0, 10).join(', ') + (faltan.length > 10 ? '…' : '') + '. Use la planilla del curso.');
+    const datos = [];
+    filas.slice(hi + 1).forEach(function (r, k) {
+      if (!r.join('').trim()) return;
+      const resp = []; for (let q = 1; q <= nP; q++) resp.push(r[cols[q]]);
+      datos.push({ fila: hi + 2 + k, rut: r[cR], nombre: cN >= 0 ? r[cN] : '', respuestas: resp });
+    });
+    const v = await api('cargarRespuestas', { evalId: evalId, curso: curso, filas: datos, soloValidar: true });
+    let cuerpo = '<p>Archivo <b>' + esc(f.name) + '</b>: <b>' + v.aceptadas + '</b> estudiantes listos para cargar en <b>' + curso + '</b>.</p>';
+    if (v.errores.length) cuerpo += '<div class="aviso error"><b>' + v.errores.length + ' fila(s) no se cargarán:</b><ul>' + v.errores.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    if (v.advertencias.length) cuerpo += '<div class="aviso advertencia"><b>' + v.advertencias.length + ' advertencia(s):</b><ul>' + v.advertencias.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    if (v.sinRespuesta.length) cuerpo += '<div class="aviso"><b>Estudiantes de la matrícula sin respuestas en el archivo (' + v.sinRespuesta.length + '):</b> ' + v.sinRespuesta.map(esc).join(', ') + '. Quedarán «Sin registro» (ausentes) salvo que se eximan.</div>';
+    cuerpo += '<p style="margin-bottom:0">Si un estudiante ya tenía respuestas, se reemplazarán por las del archivo.</p>';
+    modal('Revisión de la planilla', cuerpo, '<button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn prim" id="r-ok"' + (v.aceptadas ? '' : ' disabled') + '>Cargar ' + v.aceptadas + ' estudiantes</button>', true);
+    $('r-ok').onclick = async function () {
+      cerrarModal();
+      try {
+        const r = await api('cargarRespuestas', { evalId: evalId, curso: curso, filas: datos });
+        toast('Carga completa: ' + r.nuevas + ' nuevos y ' + r.reemplazadas + ' reemplazados.', 'ok');
+        cargarPanel();
+      } catch (e) { errorToast(e); }
+    };
+  } catch (e) { errorToast(e); }
+}
+async function eximirEst(rut, eximir) {
+  const e = S.cache.carga.estudiantes.find(function (x) { return x.rut === rut; });
+  if (eximir) {
+    modal('Eximir de la evaluación', '<p>Estudiante: <b>' + esc(e.nombre) + '</b> (' + rut + ')</p><p style="color:var(--text-2);font-size:13px">El estudiante quedará excluido del cálculo de resultados de esta evaluación. Registre el fundamento según el Reglamento de Evaluación (Decreto N°67) y, si corresponde, la evaluación diferenciada (Decreto N°83).</p><label>Motivo de la eximición</label><textarea id="x-motivo" rows="3" style="width:100%" placeholder="Ej.: Licencia médica del 10 al 24 de marzo; se reprograma evaluación."></textarea>',
+      '<button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn prim" id="x-ok">Eximir</button>');
+    $('x-ok').onclick = async function () {
+      try { await api('eximir', { evalId: $('c-eval').value, curso: $('c-curso').value, rut: rut, eximido: true, motivo: $('x-motivo').value }); cerrarModal(); toast('Estudiante eximido.', 'ok'); cargarPanel(); } catch (err) { errorToast(err); }
+    };
+  } else {
+    if (!await confirmar('Revertir eximición', '¿Desea que <b>' + esc(e.nombre) + '</b> vuelva a considerarse en el cálculo de esta evaluación?', 'Revertir')) return;
+    try { await api('eximir', { evalId: $('c-eval').value, curso: $('c-curso').value, rut: rut, eximido: false }); toast('Eximición revertida.', 'ok'); cargarPanel(); } catch (err) { errorToast(err); }
+  }
+}
+async function borrarRespuestas() {
+  if (!await confirmar('Borrar respuestas', 'Se eliminarán todas las respuestas cargadas del curso <b>' + $('c-curso').value + '</b> en esta evaluación. Las eximiciones se conservan.', 'Borrar respuestas')) return;
+  try { await api('borrarRespuestasCurso', { evalId: $('c-eval').value, curso: $('c-curso').value }); toast('Respuestas eliminadas.', 'ok'); cargarPanel(); } catch (e) { errorToast(e); }
+}
+
+/* =====================================================================
+ *  RESULTADOS
+ * ===================================================================== */
+async function vResultados(p) {
+  const lista = await evaluaciones(true);
+  let h = cabecera('Resultados', 'Cuadro maestro, análisis por pregunta, por OA, habilidad e indicador, y resultados por estudiante.', '<button class="btn" id="r-xls" disabled>Descargar Excel institucional</button><button class="btn" onclick="window.print()">Imprimir / PDF</button>');
+  h += '<div class="filtros"><div style="flex:1;min-width:280px"><label>Evaluación</label><select id="r-eval">' + opcionesEval(lista, p.evalId) + '</select></div><div><label>Curso</label><select id="r-curso"></select></div></div><div id="r-cuerpo"></div>';
+  $('principal').innerHTML = h;
+  const selE = $('r-eval'), selC = $('r-curso');
+  function cursos() { const ev = lista.find(function (e) { return e.id === selE.value; }); selC.innerHTML = opcionesCurso(cursosPara(ev), p.curso, true); }
+  selE.onchange = function () { p.curso = null; cursos(); cargarResultados(); };
+  selC.onchange = cargarResultados;
+  cursos(); cargarResultados();
+}
+async function cargarResultados() {
+  const evalId = $('r-eval').value, curso = $('r-curso').value, cont = $('r-cuerpo');
+  $('r-xls').disabled = true; destruirGraficos();
+  if (!evalId || !curso) { cont.innerHTML = '<div class="panel vacio">Seleccione una evaluación y un curso.</div>'; return; }
+  try {
+    const R = await api('resultados', { evalId: evalId, curso: curso });
+    S.cache.res = R;
+    if (!R.resumen.rendidas) { cont.innerHTML = '<div class="panel vacio">Aún no hay respuestas cargadas para ' + (curso === '*' ? 'este nivel' : curso) + '.</div>'; return; }
+    $('r-xls').disabled = false; $('r-xls').onclick = function () { exportarResultados(R).catch(errorToast); };
+    cont.innerHTML = '<div class="pestanas" id="r-tabs">' + [['resumen', 'Resumen'], ['maestro', 'Cuadro maestro'], ['preguntas', 'Por pregunta'], ['oa', 'Por OA'], ['habilidad', 'Por habilidad'], ['indicador', 'Por indicador'], ['estudiantes', 'Estudiantes']]
+      .map(function (t, i) { return '<button data-t="' + t[0] + '"' + (i === 0 ? ' class="activo"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div><div id="r-tab"></div>';
+    $('r-tabs').querySelectorAll('button').forEach(function (b) {
+      b.onclick = function () { $('r-tabs').querySelectorAll('button').forEach(function (x) { x.classList.toggle('activo', x === b); }); pintarTab(b.dataset.t); };
+    });
+    pintarTab('resumen');
+  } catch (e) { cont.innerHTML = '<div class="aviso error">' + esc(e.message) + '</div>'; }
+}
+function pintarTab(t) {
+  const R = S.cache.res, c = R.config, rs = R.resumen, cont = $('r-tab');
+  destruirGraficos();
+  const titulo = (R.evaluacion.estadoMatriz !== 'Validada' ? '<div class="aviso advertencia"><b>Resultados preliminares:</b> la matriz de esta evaluación aún no ha sido validada por UTP.</div>' : '') + '<p style="margin:0 0 12px;color:var(--text-2)"><b>' + esc(R.evaluacion.nombre) + '</b> · ' + esc(R.evaluacion.tipo) + ' · ' + esc(R.evaluacion.asignatura) + ' · ' + R.cursos.join(', ') + ' · Exigencia ' + c.exigencia + ' % · Niveles: Insuficiente &lt; ' + c.limiteElemental + ' % ≤ Elemental &lt; ' + c.limiteAdecuado + ' % ≤ Adecuado</p>';
+  if (t === 'resumen') {
+    let h = titulo + '<div class="kpis">' +
+      '<div class="kpi"><span>Logro promedio</span><b>' + pct(rs.pctPromedio) + '</b>' + chip(rs.nivel) + '</div>' +
+      '<div class="kpi"><span>Nota promedio</span><b>' + notaTxt(rs.notaPromedio) + '</b><small>mín. ' + notaTxt(rs.notaMinima) + ' · máx. ' + notaTxt(rs.notaMaxima) + '</small></div>' +
+      '<div class="kpi"><span>Aprobación (nota ≥ ' + num(c.notaAprob) + ')</span><b>' + pct(rs.pctAprobacion) + '</b><small>' + rs.aprobados + ' de ' + rs.rendidas + '</small></div>' +
+      '<div class="kpi"><span>Evaluados</span><b>' + rs.rendidas + '</b><small>de ' + rs.matricula + ' · cobertura ' + pct(rs.cobertura) + '</small></div>' +
+      '<div class="kpi"><span>Eximidos / sin registro</span><b>' + rs.eximidos + ' / ' + rs.sinRegistro + '</b></div>' +
+      '<div class="kpi"><span>Preguntas &lt; ' + c.umbralRemedial + ' %</span><b>' + rs.preguntasRemedial + '</b><small>requieren remedial</small></div></div>';
+    h += '<div class="rejilla"><div class="panel"><h3>Distribución por nivel de desempeño</h3><div class="lienzo"><canvas id="g-niveles"></canvas></div>' +
+      '<div class="tabla-cont" style="margin-top:10px"><table><thead><tr><th>Nivel</th><th class="num">Estudiantes</th><th class="num">%</th></tr></thead><tbody>' + NIVELES.map(function (n) { return '<tr><td>' + chip(n) + '</td><td class="num">' + rs.niveles[n] + '</td><td class="num">' + pct(rs.rendidas ? rs.niveles[n] / rs.rendidas * 100 : 0) + '</td></tr>'; }).join('') + '</tbody></table></div></div>' +
+      '<div class="panel"><h3>Distribución de notas</h3><div class="lienzo"><canvas id="g-notas"></canvas></div></div></div>';
+    h += '<div class="panel"><h3>Porcentaje de logro por pregunta</h3><div class="sub">Las barras rojas están bajo el ' + c.umbralRemedial + ' % y requieren remedial.</div><div class="lienzo" style="height:300px"><canvas id="g-preg"></canvas></div><div class="leyenda"><span><i style="background:var(--serie)"></i>Logro ≥ ' + c.umbralRemedial + ' %</span><span><i style="background:var(--insuf)"></i>Logro &lt; ' + c.umbralRemedial + ' % (remedial)</span></div></div>';
+    h += '<div class="rejilla"><div class="panel"><h3>Logro por OA</h3>' + tablaDimension(R.porOA, 'OA', c, true) + '</div><div class="panel"><h3>Logro por habilidad</h3>' + tablaDimension(R.porHabilidad, 'Habilidad', c, true) + '</div></div>';
+    cont.innerHTML = h;
+    graficoNiveles('g-niveles', rs.niveles);
+    const rend = R.estudiantes.filter(function (e) { return e.estado === 'Rendida'; });
+    const tramos = ['1,0–1,9', '2,0–2,9', '3,0–3,9', '4,0–4,9', '5,0–5,9', '6,0–7,0'], cuenta = [0, 0, 0, 0, 0, 0];
+    rend.forEach(function (e) { cuenta[Math.min(5, Math.max(0, Math.floor(e.nota) - 1))]++; });
+    S.graficos.push(new Chart($('g-notas'), { type: 'bar', data: { labels: tramos, datasets: [{ label: 'Estudiantes', data: cuenta, backgroundColor: tramos.map(function (_, i) { return i < 3 ? '#d03b3b' : '#2a78d6'; }), borderRadius: 4, maxBarThickness: 46 }] },
+      options: opcionesBase({ y: { ticks: { precision: 0 }, title: { display: true, text: 'Estudiantes' } } }) }));
+    graficoPreguntas('g-preg', R.preguntas, c.umbralRemedial);
+  } else if (t === 'maestro') {
+    const ev = R.matriz;
+    let h = titulo + '<div class="panel"><div class="leyenda" style="margin:0 0 10px"><span><i style="background:#e5f6e5"></i>Correcta</span><span><i style="background:#fbe9e9"></i>Incorrecta (se muestra la alternativa marcada)</span><span><i style="background:#f3f4f6"></i>Omitida</span><span><i style="background:#fff4dc"></i>Abierta con puntaje parcial</span></div><div class="tabla-cont" style="max-height:66vh"><table class="cm"><thead><tr><th class="nom">Estudiante</th>' + (R.cursos.length > 1 ? '<th>Curso</th>' : '') +
+      ev.map(function (m) { return '<th title="' + esc(m.oa + ' · ' + m.habilidad + ' · ' + m.indicador) + '">P' + m.pregunta + '<br><small style="font-weight:500">' + (m.tipo === 'AB' ? 'AB/' + m.puntaje : m.clave) + '</small></th>'; }).join('') +
+      '<th>B</th><th>M</th><th>O</th><th>Pts.</th><th>%</th><th>Nota</th><th>Nivel</th></tr></thead><tbody>';
+    R.estudiantes.forEach(function (e) {
+      h += '<tr><td class="nom">' + esc(e.nombre) + (e.pie === 'SI' ? '<span class="marca-pie">PIE</span>' : '') + '</td>' + (R.cursos.length > 1 ? '<td>' + e.curso + '</td>' : '');
+      if (e.estado !== 'Rendida') { h += '<td colspan="' + (ev.length + 7) + '" style="text-align:left;color:var(--muted)">' + e.estado + (e.motivo ? ' · ' + esc(e.motivo) : '') + '</td></tr>'; return; }
+      e.det.forEach(function (d, k) {
+        const m = ev[k];
+        if (m.tipo === 'AB') h += '<td class="' + (d.om ? 'om' : (d.ok === 1 ? 'ok' : (d.ok === 0.5 ? 'par' : 'mal'))) + '">' + (d.om ? '–' : d.p) + '</td>';
+        else h += '<td class="' + (d.om ? 'om' : (d.ok ? 'ok' : 'mal')) + '">' + (d.om ? '–' : (d.ok ? '✓' : esc(d.r))) + '</td>';
+      });
+      h += '<td>' + e.buenas + '</td><td>' + e.malas + '</td><td>' + e.omitidas + '</td><td>' + num(e.puntaje, 0) + '/' + e.maximo + '</td><td>' + num(e.pct) + '</td><td><b style="color:' + (e.nota < c.notaAprob ? '#a12626' : 'inherit') + '">' + notaTxt(e.nota) + '</b></td><td>' + chip(e.nivel) + '</td></tr>';
+    });
+    h += '<tr style="background:#f3f6fa;font-weight:600"><td class="nom" style="background:#f3f6fa">% de logro</td>' + (R.cursos.length > 1 ? '<td></td>' : '') + R.preguntas.map(function (q) { return '<td style="color:' + (q.remedial ? '#a12626' : 'inherit') + '">' + num(q.pct, 0) + '</td>'; }).join('') + '<td colspan="7"></td></tr>';
+    h += '</tbody></table></div></div>';
+    cont.innerHTML = h;
+  } else if (t === 'preguntas') {
+    let h = titulo + '<div class="panel"><div class="sub" style="margin:0 0 10px">Distribución de respuestas por alternativa. La clave aparece destacada; el distractor es la alternativa incorrecta más elegida.</div><div class="tabla-cont" style="max-height:66vh"><table><thead><tr><th>P</th><th>Tipo</th><th>Clave</th><th>OA</th><th>Habilidad</th><th>Indicador</th><th class="num">A</th><th class="num">B</th><th class="num">C</th><th class="num">D</th><th class="num">Omit.</th><th>Distractor</th><th style="min-width:150px">Logro</th><th>Nivel</th></tr></thead><tbody>';
+    R.preguntas.forEach(function (q) {
+      const celda = function (l) { const v = q.distribucion[l] || 0, pc = q.n ? Math.round(v / q.n * 100) : 0; return '<td class="num"' + (l === q.clave ? ' style="background:#e5f6e5;font-weight:700"' : '') + '>' + v + '<br><small style="color:var(--muted)">' + pc + ' %</small></td>'; };
+      h += '<tr><td><b>P' + q.pregunta + '</b></td><td>' + q.tipo + '</td><td>' + (q.tipo === 'SM' ? q.clave : 'máx. ' + q.puntaje) + '</td><td>' + esc(q.oa) + '</td><td>' + esc(q.habilidad) + '</td><td style="min-width:200px">' + esc(q.indicador) + '</td>' +
+        (q.tipo === 'SM' ? celda('A') + celda('B') + celda('C') + celda('D') + '<td class="num">' + q.distribucion.Omitida + '</td><td>' + (q.distractor ? q.distractor + ' (' + num(q.distractorPct) + ' %)' : '—') + '</td>'
+          : '<td colspan="4" style="font-size:12px">' + Object.keys(q.distribucion).filter(function (k) { return k !== 'Omitida'; }).map(function (k) { return k + ' pts: ' + q.distribucion[k]; }).join(' · ') + '<br>Promedio: ' + num(q.promedio) + ' de ' + q.puntaje + '</td><td class="num">' + q.distribucion.Omitida + '</td><td>—</td>') +
+        '<td>' + barra(q.pct, c.umbralRemedial) + '</td><td>' + chip(q.nivel) + '</td></tr>';
+    });
+    h += '</tbody></table></div></div>';
+    cont.innerHTML = h;
+  } else if (t === 'oa' || t === 'habilidad' || t === 'indicador') {
+    const datos = t === 'oa' ? R.porOA : t === 'habilidad' ? R.porHabilidad : R.porIndicador;
+    const etiqueta = t === 'oa' ? 'OA' : t === 'habilidad' ? 'Habilidad' : 'Indicador';
+    let h = titulo + '<div class="panel"><h3>Logro por ' + etiqueta.toLowerCase() + '</h3><div class="sub">Cuantitativo: % del puntaje obtenido en las preguntas asociadas. Cualitativo: nivel de desempeño y distribución de estudiantes por nivel en ese ' + etiqueta.toLowerCase() + '.</div><div class="lienzo" style="height:' + Math.max(200, datos.length * 38 + 60) + 'px"><canvas id="g-dim"></canvas></div><div class="leyenda"><span><i style="background:var(--serie)"></i>Logro ≥ ' + c.umbralRemedial + ' %</span><span><i style="background:var(--insuf)"></i>Logro &lt; ' + c.umbralRemedial + ' % (remedial)</span></div></div>';
+    h += '<div class="panel">' + tablaDimension(datos, etiqueta, c, false) + '</div>';
+    cont.innerHTML = h;
+    S.graficos.push(new Chart($('g-dim'), { type: 'bar', data: { labels: datos.map(function (g) { return recortar(g.nombre, 48); }), datasets: [{ label: '% de logro', data: datos.map(function (g) { return g.pct; }), backgroundColor: datos.map(function (g) { return g.remedial ? '#d03b3b' : '#2a78d6'; }), borderRadius: 4, maxBarThickness: 24 }] },
+      options: opcionesBase({ x: { min: 0, max: 100, ticks: { callback: function (v) { return v + ' %'; } } } }, true, function (ctx) { return ' ' + num(ctx.parsed.x) + ' %'; }) }));
+  } else if (t === 'estudiantes') {
+    let h = titulo + '<div class="panel"><div class="filtros" style="margin-bottom:10px"><div><label>Buscar</label><input placeholder="Nombre o RUT" oninput="filtrarTabla(\'t-res-est\',this.value)"></div></div><div class="tabla-cont" style="max-height:66vh"><table id="t-res-est"><thead><tr><th class="num">N°</th><th>RUT</th><th>Nombre</th>' + (R.cursos.length > 1 ? '<th>Curso</th>' : '') + '<th class="num">Buenas</th><th class="num">Malas</th><th class="num">Omitidas</th><th class="num">Pts. abiertas</th><th class="num">Puntaje</th><th class="num">%</th><th class="num">Nota</th><th>Nivel</th>' +
+      R.porOA.map(function (g) { return '<th class="num" title="Logro en ' + esc(g.nombre) + '">' + esc(recortar(g.nombre, 14)) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    R.estudiantes.forEach(function (e, i) {
+      h += '<tr><td class="num">' + (i + 1) + '</td><td>' + e.rut + '</td><td>' + esc(e.nombre) + (e.pie === 'SI' ? '<span class="marca-pie">PIE</span>' : '') + '</td>' + (R.cursos.length > 1 ? '<td>' + e.curso + '</td>' : '');
+      if (e.estado !== 'Rendida') { h += '<td colspan="' + (8 + R.porOA.length) + '" style="color:var(--muted)">' + e.estado + (e.motivo ? ' · ' + esc(e.motivo) : '') + '</td></tr>'; return; }
+      h += '<td class="num">' + e.buenas + '</td><td class="num">' + e.malas + '</td><td class="num">' + e.omitidas + '</td><td class="num">' + num(e.ptsAbiertas, 0) + '</td><td class="num">' + num(e.puntaje, 0) + ' / ' + e.maximo + '</td><td class="num">' + num(e.pct) + '</td><td class="num"><b style="color:' + (e.nota < c.notaAprob ? '#a12626' : 'inherit') + '">' + notaTxt(e.nota) + '</b></td><td>' + chip(e.nivel) + '</td>' +
+        R.porOA.map(function (g) { const v = e.oa[g.nombre]; return '<td class="num" style="' + (v !== null && v < c.umbralRemedial ? 'color:#a12626;font-weight:600' : '') + '">' + num(v, 0) + '</td>'; }).join('') + '</tr>';
+    });
+    h += '</tbody></table></div></div>';
+    cont.innerHTML = h;
+  }
+}
+function recortar(s, n) { s = String(s); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+function tablaDimension(datos, etiqueta, c, compacta) {
+  return '<div class="tabla-cont"><table><thead><tr><th>' + etiqueta + '</th>' + (compacta ? '' : '<th>Preguntas</th>' + (etiqueta !== 'OA' ? '<th>OA asociados</th>' : '<th>Habilidades</th>')) + '<th style="min-width:150px">Logro</th><th>Nivel</th>' + (compacta ? '' : '<th class="num">Insuf.</th><th class="num">Elem.</th><th class="num">Adec.</th>') + '</tr></thead><tbody>' +
+    datos.map(function (g) {
+      return '<tr><td>' + esc(g.nombre) + (g.critico ? ' <span class="chip alerta">Crítico</span>' : '') + '</td>' + (compacta ? '' : '<td>' + g.preguntas.map(function (p) { return 'P' + p; }).join(', ') + '</td><td style="font-size:12px">' + esc((etiqueta !== 'OA' ? g.oas : g.habilidades).join(' · ')) + '</td>') +
+        '<td>' + barra(g.pct, c.umbralRemedial) + '</td><td>' + chip(g.nivel) + '</td>' + (compacta ? '' : '<td class="num">' + g.niveles.Insuficiente + '</td><td class="num">' + g.niveles.Elemental + '</td><td class="num">' + g.niveles.Adecuado + '</td>') + '</tr>';
+    }).join('') + '</tbody></table></div>';
+}
+function opcionesBase(escalas, horizontal, etiquetaTooltip) {
+  const o = { responsive: true, maintainAspectRatio: false, animation: false, indexAxis: horizontal ? 'y' : 'x',
+    plugins: { legend: { display: false }, tooltip: { callbacks: etiquetaTooltip ? { label: etiquetaTooltip } : {} } },
+    scales: { x: { grid: { display: horizontal, color: '#edf0f4' }, ticks: { color: '#4d5a68' } }, y: { grid: { display: !horizontal, color: '#edf0f4' }, ticks: { color: '#4d5a68' }, beginAtZero: true } } };
+  Object.keys(escalas || {}).forEach(function (k) { o.scales[k] = Object.assign(o.scales[k], escalas[k]); });
+  return o;
+}
+function graficoNiveles(id, niveles) {
+  S.graficos.push(new Chart($(id), { type: 'bar', data: { labels: NIVELES, datasets: [{ label: 'Estudiantes', data: NIVELES.map(function (n) { return niveles[n]; }), backgroundColor: NIVELES.map(function (n) { return COLOR_NIVEL[n]; }), borderRadius: 4, maxBarThickness: 48 }] },
+    options: opcionesBase({ y: { ticks: { precision: 0 }, title: { display: true, text: 'Estudiantes' } } }) }));
+}
+function graficoPreguntas(id, preguntas, umbral) {
+  S.graficos.push(new Chart($(id), { type: 'bar', data: { labels: preguntas.map(function (q) { return 'P' + q.pregunta; }), datasets: [{ label: '% de logro', data: preguntas.map(function (q) { return q.pct; }), backgroundColor: preguntas.map(function (q) { return q.pct < umbral ? '#d03b3b' : '#2a78d6'; }), borderRadius: 4, maxBarThickness: 22 }] },
+    options: opcionesBase({ y: { min: 0, max: 100, ticks: { callback: function (v) { return v + ' %'; } } } }, false, function (ctx) { const q = preguntas[ctx.dataIndex]; return [' Logro: ' + num(q.pct) + ' %', ' ' + q.oa + ' · ' + q.habilidad]; }) }));
+}
+
+async function exportarResultados(R) {
+  const c = R.config, ev = R.evaluacion, cursosTxt = R.cursos.join(', ');
+  const wb = new ExcelJS.Workbook(); wb.creator = 'UTP360 · Evalúa';
+  const info = ['Evaluación: ' + ev.nombre + ' · ' + ev.tipo + ' · ' + ev.asignatura + ' · ' + ev.nivel + '° básico', 'Curso(s): ' + cursosTxt + ' · Fecha de aplicación: ' + fechaTxt(ev.fecha) + ' · Exigencia: ' + c.exigencia + ' % · Puntaje máximo: ' + R.resumen.maximo,
+    'Niveles: Insuficiente < ' + c.limiteElemental + ' % · Elemental ' + c.limiteElemental + '–' + num(c.limiteAdecuado - 0.1) + ' % · Adecuado ≥ ' + c.limiteAdecuado + ' % · Generado: ' + new Date().toLocaleString('es-CL')];
+  const multi = R.cursos.length > 1;
+
+  // 1. Resultados por estudiante
+  const ws = wb.addWorksheet('Resultados');
+  const tit = ['N°', 'RUT', 'Nombre'].concat(multi ? ['Curso'] : []).concat(['PIE', 'Estado', 'Buenas', 'Malas', 'Omitidas', 'Pts. abiertas', 'Puntaje', '% logro', 'Nota', 'Nivel']);
+  ws.columns = tit.map(function (t) { return { width: t === 'Nombre' ? 36 : t === 'RUT' ? 13 : t === 'Estado' ? 13 : 9 }; });
+  let f = encabezadoInstitucional(ws, 'Resultados por estudiante', info, tit.length);
+  filaEncabezado(ws, f, tit);
+  R.estudiantes.forEach(function (e, i) {
+    f++;
+    const rinde = e.estado === 'Rendida';
+    const vals = [i + 1, e.rut, e.nombre].concat(multi ? [e.curso] : []).concat([e.pie === 'SI' ? 'Sí' : '', e.estado + (e.motivo ? ': ' + e.motivo : ''),
+      rinde ? e.buenas : '', rinde ? e.malas : '', rinde ? e.omitidas : '', rinde ? e.ptsAbiertas : '', rinde ? e.puntaje : '', rinde ? e.pct / 100 : '', rinde ? e.nota : '', rinde ? e.nivel : '']);
+    const fmts = vals.map(function (_, k) { return k === vals.length - 3 ? '0.0%' : (k === vals.length - 2 ? '0.0' : null); });
+    const r = filaDatos(ws, f, vals, fmts);
+    if (rinde) { pintarNivel(r.getCell(vals.length), e.nivel); if (e.nota < c.notaAprob) r.getCell(vals.length - 1).font = { bold: true, color: { argb: 'FFA12626' } }; }
+  });
+  f += 2;
+  const rs = R.resumen;
+  [['Evaluados', rs.rendidas + ' de ' + rs.matricula], ['Eximidos', rs.eximidos], ['Sin registro', rs.sinRegistro], ['Logro promedio', num(rs.pctPromedio) + ' %'], ['Nota promedio', notaTxt(rs.notaPromedio)],
+    ['Aprobación', num(rs.pctAprobacion) + ' % (' + rs.aprobados + ')'], ['Insuficiente', rs.niveles.Insuficiente], ['Elemental', rs.niveles.Elemental], ['Adecuado', rs.niveles.Adecuado]].forEach(function (x) {
+    ws.getCell(f, 2).value = x[0]; ws.getCell(f, 2).font = { bold: true }; ws.getCell(f, 3).value = x[1]; f++;
+  });
+  ws.views = [{ state: 'frozen', ySplit: 7 }];
+
+  // 2. Cuadro maestro
+  const wm = wb.addWorksheet('Cuadro maestro');
+  const tm = ['Nombre'].concat(multi ? ['Curso'] : []).concat(R.matriz.map(function (m) { return 'P' + m.pregunta; })).concat(['Puntaje', 'Nota']);
+  wm.columns = tm.map(function (t) { return { width: t === 'Nombre' ? 34 : 6 }; });
+  f = encabezadoInstitucional(wm, 'Cuadro maestro (✓ correcta · letra = alternativa incorrecta marcada · – omitida · número = puntaje abierta)', info, Math.min(tm.length, 20));
+  filaEncabezado(wm, f, tm);
+  f++; filaDatos(wm, f, ['Clave'].concat(multi ? [''] : []).concat(R.matriz.map(function (m) { return m.tipo === 'AB' ? 'AB/' + m.puntaje : m.clave; })).concat(['', ''])).font = { bold: true };
+  R.estudiantes.forEach(function (e) {
+    f++;
+    if (e.estado !== 'Rendida') { filaDatos(wm, f, [e.nombre].concat(multi ? [e.curso] : []).concat([e.estado])); return; }
+    const r = filaDatos(wm, f, [e.nombre].concat(multi ? [e.curso] : []).concat(e.det.map(function (d, k) { return R.matriz[k].tipo === 'AB' ? (d.om ? '–' : d.p) : (d.om ? '–' : (d.ok ? '✓' : d.r)); })).concat([e.puntaje, e.nota]));
+    e.det.forEach(function (d, k) {
+      const cel = r.getCell((multi ? 3 : 2) + k); cel.alignment = { horizontal: 'center' };
+      const color = d.om ? 'FFF3F4F6' : (d.ok === 1 ? 'FFE5F6E5' : (d.ok === 0.5 ? 'FFFFF4DC' : 'FFFBE9E9'));
+      cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
+    });
+  });
+  f++; filaDatos(wm, f, ['% de logro'].concat(multi ? [''] : []).concat(R.preguntas.map(function (q) { return q.pct === null ? '' : q.pct / 100; })), ['', ''].concat(R.preguntas.map(function () { return '0%'; }))).font = { bold: true };
+
+  // 3. Por pregunta
+  const wp = wb.addWorksheet('Por pregunta');
+  const tp = ['Pregunta', 'Tipo', 'Clave', 'OA', 'Habilidad', 'Indicador', 'A', 'B', 'C', 'D', 'Omitidas', 'Distractor', '% logro', 'Nivel', 'Remedial'];
+  wp.columns = tp.map(function (t) { return { width: t === 'Indicador' ? 42 : t === 'Habilidad' ? 22 : 10 }; });
+  f = encabezadoInstitucional(wp, 'Análisis por pregunta', info, tp.length);
+  filaEncabezado(wp, f, tp);
+  R.preguntas.forEach(function (q) {
+    f++;
+    const d = q.distribucion;
+    const r = filaDatos(wp, f, [q.pregunta, q.tipo, q.tipo === 'SM' ? q.clave : 'máx. ' + q.puntaje, q.oa, q.habilidad, q.indicador,
+      q.tipo === 'SM' ? d.A : '', q.tipo === 'SM' ? d.B : '', q.tipo === 'SM' ? d.C : '', q.tipo === 'SM' ? d.D : '', d.Omitida, q.distractor ? q.distractor + ' (' + num(q.distractorPct) + ' %)' : '',
+      q.pct === null ? '' : q.pct / 100, q.nivel, q.remedial ? 'Sí' : 'No'], [null, null, null, null, null, null, null, null, null, null, null, null, '0.0%']);
+    pintarNivel(r.getCell(14), q.nivel);
+    if (q.tipo === 'SM') { const k = { A: 7, B: 8, C: 9, D: 10 }[q.clave]; r.getCell(k).font = { bold: true, color: { argb: 'FF126B12' } }; }
+  });
+
+  // 4 y 5. Por OA y por habilidad
+  [['Por OA', R.porOA, 'OA'], ['Por habilidad', R.porHabilidad, 'Habilidad'], ['Por indicador', R.porIndicador, 'Indicador']].forEach(function (x) {
+    const wd = wb.addWorksheet(x[0]);
+    const td = [x[2], 'Preguntas', '% logro', 'Nivel', 'Insuficiente', 'Elemental', 'Adecuado', 'Remedial'];
+    wd.columns = td.map(function (t, i) { return { width: i === 0 ? 46 : i === 1 ? 26 : 12 }; });
+    let g = encabezadoInstitucional(wd, 'Logro por ' + x[2].toLowerCase(), info, td.length);
+    filaEncabezado(wd, g, td);
+    x[1].forEach(function (d) {
+      g++;
+      const r = filaDatos(wd, g, [d.nombre, d.preguntas.map(function (p) { return 'P' + p; }).join(', '), d.pct === null ? '' : d.pct / 100, d.nivel, d.niveles.Insuficiente, d.niveles.Elemental, d.niveles.Adecuado, d.remedial ? 'Sí' : 'No'], [null, null, '0.0%']);
+      pintarNivel(r.getCell(4), d.nivel);
+    });
+  });
+  await guardarLibro(wb, 'Resultados_' + nombreArchivo(ev.nombre) + '_' + nombreArchivo(R.cursos.length > 1 ? ev.nivel + 'basico_nivel' : R.cursos[0]) + '.xlsx');
+}
+
+/* =====================================================================
+ *  COMPARATIVOS
+ * ===================================================================== */
+async function vComparativo(p) {
+  const lista = await evaluaciones(true);
+  let h = cabecera('Comparativos', 'Comparación entre cursos de un mismo nivel y evolución de un curso a lo largo de las evaluaciones.');
+  h += '<div class="pestanas" id="cp-tabs"><button data-t="cursos" class="activo">Entre cursos</button><button data-t="trayectoria">Evolución del curso</button></div><div id="cp-cuerpo"></div>';
+  $('principal').innerHTML = h;
+  $('cp-tabs').querySelectorAll('button').forEach(function (b) { b.onclick = function () { $('cp-tabs').querySelectorAll('button').forEach(function (x) { x.classList.toggle('activo', x === b); }); destruirGraficos(); b.dataset.t === 'cursos' ? compCursos(lista) : compTrayectoria(); }; });
+  compCursos(lista);
+}
+function compCursos(lista) {
+  $('cp-cuerpo').innerHTML = '<div class="filtros"><div style="flex:1;min-width:280px"><label>Evaluación</label><select id="cp-eval">' + opcionesEval(lista) + '</select></div></div><div id="cp-res"></div>';
+  $('cp-eval').onchange = async function () {
+    destruirGraficos();
+    const id = this.value; if (!id) { $('cp-res').innerHTML = ''; return; }
+    try {
+      const d = await api('comparativo', { evalId: id }), c = d.config;
+      const conDatos = d.cursos.filter(function (x) { return x.resumen.rendidas; });
+      if (!conDatos.length) { $('cp-res').innerHTML = '<div class="panel vacio">Sin respuestas cargadas en esta evaluación.</div>'; return; }
+      let h = '<div class="panel"><h3>Resumen por curso</h3><div class="tabla-cont"><table><thead><tr><th>Curso</th><th class="num">Evaluados</th><th style="min-width:160px">Logro promedio</th><th class="num">Nota prom.</th><th class="num">Aprobación</th><th class="num">Insuf.</th><th class="num">Elem.</th><th class="num">Adec.</th><th>Nivel</th></tr></thead><tbody>';
+      d.cursos.concat([{ curso: 'Nivel ' + d.evaluacion.nivel + '°', resumen: d.nivel.resumen, total: true }]).forEach(function (x) {
+        const r = x.resumen, n = r.rendidas || 1;
+        h += '<tr' + (x.total ? ' style="font-weight:700;background:#f3f6fa"' : '') + '><td>' + x.curso + '</td><td class="num">' + r.rendidas + ' / ' + r.matricula + '</td><td>' + barra(r.pctPromedio, c.umbralRemedial) + '</td><td class="num">' + notaTxt(r.notaPromedio) + '</td><td class="num">' + pct(r.pctAprobacion) + '</td><td class="num">' + pct(r.niveles.Insuficiente / n * 100) + '</td><td class="num">' + pct(r.niveles.Elemental / n * 100) + '</td><td class="num">' + pct(r.niveles.Adecuado / n * 100) + '</td><td>' + chip(r.nivel) + '</td></tr>';
+      });
+      h += '</tbody></table></div></div>';
+      h += '<div class="rejilla"><div class="panel"><h3>Logro promedio por curso</h3><div class="lienzo"><canvas id="g-cp"></canvas></div></div><div class="panel"><h3>Distribución por nivel (% de estudiantes)</h3><div class="lienzo"><canvas id="g-cp-niv"></canvas></div><div class="leyenda">' + NIVELES.map(function (n) { return '<span><i style="background:' + COLOR_NIVEL[n] + '"></i>' + n + '</span>'; }).join('') + '</div></div></div>';
+      h += '<div class="panel"><h3>Mapa de logro por OA y curso</h3><div class="sub">Rojo: bajo ' + c.umbralRemedial + ' % (remedial) · Ámbar: ' + c.umbralRemedial + ' % a ' + c.limiteAdecuado + ' % · Verde: ≥ ' + c.limiteAdecuado + ' %.</div>' + mapaCalor(d, 'oa', c) + '</div>';
+      h += '<div class="panel"><h3>Mapa de logro por habilidad y curso</h3>' + mapaCalor(d, 'habilidad', c) + '</div>';
+      $('cp-res').innerHTML = h;
+      S.graficos.push(new Chart($('g-cp'), { type: 'bar', data: { labels: conDatos.map(function (x) { return x.curso; }), datasets: [{ label: 'Logro promedio', data: conDatos.map(function (x) { return x.resumen.pctPromedio; }), backgroundColor: '#2a78d6', borderRadius: 4, maxBarThickness: 56 }] },
+        options: opcionesBase({ y: { min: 0, max: 100, ticks: { callback: function (v) { return v + ' %'; } } } }, false, function (ctx) { return ' ' + num(ctx.parsed.y) + ' %'; }) }));
+      const ds = NIVELES.map(function (n) { return { label: n, data: conDatos.map(function (x) { return x.resumen.rendidas ? Math.round(x.resumen.niveles[n] / x.resumen.rendidas * 1000) / 10 : 0; }), backgroundColor: COLOR_NIVEL[n], borderColor: '#ffffff', borderWidth: 2, maxBarThickness: 56 }; });
+      const o = opcionesBase({ y: { min: 0, max: 100, stacked: true, ticks: { callback: function (v) { return v + ' %'; } } }, x: { stacked: true } }, false, function (ctx) { return ' ' + ctx.dataset.label + ': ' + num(ctx.parsed.y) + ' %'; });
+      S.graficos.push(new Chart($('g-cp-niv'), { type: 'bar', data: { labels: conDatos.map(function (x) { return x.curso; }), datasets: ds }, options: o }));
+    } catch (e) { errorToast(e); }
+  };
+}
+function mapaCalor(d, campo, c) {
+  const nombres = d.nivel[campo].map(function (x) { return x.nombre; });
+  const color = function (v) { if (v === null || v === undefined) return '#f3f4f6'; return v < c.umbralRemedial ? '#fbe9e9' : (v < c.limiteAdecuado ? '#fff4dc' : '#e5f6e5'); };
+  const tinta = function (v) { if (v === null || v === undefined) return '#9aa3ad'; return v < c.umbralRemedial ? '#a12626' : (v < c.limiteAdecuado ? '#8a5a00' : '#126b12'); };
+  let h = '<div class="tabla-cont"><table class="mapa"><thead><tr><th>' + (campo === 'oa' ? 'OA' : 'Habilidad') + '</th>' + d.cursos.map(function (x) { return '<th class="cen">' + x.curso + '</th>'; }).join('') + '<th class="cen">Nivel</th></tr></thead><tbody>';
+  nombres.forEach(function (n) {
+    h += '<tr><td>' + esc(n) + '</td>';
+    d.cursos.forEach(function (x) { const g = x[campo].find(function (y) { return y.nombre === n; }); const v = g ? g.pct : null; h += '<td class="cel" style="background:' + color(v) + ';color:' + tinta(v) + '">' + (v === null ? '—' : num(v, 0) + ' %') + '</td>'; });
+    const t = d.nivel[campo].find(function (y) { return y.nombre === n; });
+    h += '<td class="cel" style="background:' + color(t.pct) + ';color:' + tinta(t.pct) + '">' + (t.pct === null ? '—' : num(t.pct, 0) + ' %') + '</td></tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+function compTrayectoria() {
+  const asigs = S.user.rol === 'docente' ? Array.from(new Set(S.user.asignaciones.map(function (a) { return a.asignatura; }))).flatMap(function (a) { return a === '*' ? S.cat.asignaturas : [a]; }) : S.cat.asignaturas;
+  $('cp-cuerpo').innerHTML = '<div class="filtros"><div><label>Curso</label><select id="tr-curso">' + opcionesCurso(S.cat.cursos) + '</select></div><div style="min-width:260px"><label>Asignatura</label><select id="tr-asig">' + Array.from(new Set(asigs)).map(function (a) { return '<option>' + esc(a) + '</option>'; }).join('') + '</select></div><div style="min-width:auto"><label>&nbsp;</label><button class="btn prim" id="tr-ver">Ver evolución</button></div></div><div id="tr-res"></div>';
+  $('tr-ver').onclick = async function () {
+    destruirGraficos();
+    try {
+      const d = await api('trayectoria', { curso: $('tr-curso').value, asignatura: $('tr-asig').value });
+      if (!d.serie.length) { $('tr-res').innerHTML = '<div class="panel vacio">No hay evaluaciones con resultados para este curso y asignatura.</div>'; return; }
+      let h = '<div class="panel"><h3>Evolución del logro promedio · ' + d.curso + ' · ' + esc(d.asignatura) + '</h3><div class="lienzo"><canvas id="g-tr"></canvas></div></div>';
+      h += '<div class="panel"><div class="tabla-cont"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Evaluación</th><th class="num">Evaluados</th><th style="min-width:160px">Logro</th><th class="num">Nota prom.</th><th class="num">Insuf.</th><th class="num">Elem.</th><th class="num">Adec.</th><th class="num">Variación</th></tr></thead><tbody>';
+      d.serie.forEach(function (s, i) {
+        const r = s.resumen, n = r.rendidas || 1, prev = i ? d.serie[i - 1].resumen.pctPromedio : null, dif = prev === null ? null : r.pctPromedio - prev;
+        h += '<tr><td>' + fechaTxt(s.fecha) + '</td><td>' + esc(s.tipo) + '</td><td>' + esc(s.nombre) + '</td><td class="num">' + r.rendidas + '</td><td>' + barra(r.pctPromedio, d.config.umbralRemedial) + '</td><td class="num">' + notaTxt(r.notaPromedio) + '</td><td class="num">' + pct(r.niveles.Insuficiente / n * 100) + '</td><td class="num">' + pct(r.niveles.Elemental / n * 100) + '</td><td class="num">' + pct(r.niveles.Adecuado / n * 100) + '</td><td class="num">' + (dif === null ? '—' : (dif >= 0 ? '▲ +' : '▼ ') + num(dif) + ' pp') + '</td></tr>';
+      });
+      h += '</tbody></table></div><div class="sub" style="margin:8px 0 0">pp = puntos porcentuales respecto de la evaluación anterior. Las evaluaciones pueden diferir en dificultad: compare con cautela entre tipos distintos.</div></div>';
+      $('tr-res').innerHTML = h;
+      S.graficos.push(new Chart($('g-tr'), { type: 'line', data: { labels: d.serie.map(function (s) { return fechaTxt(s.fecha) + ' · ' + s.tipo; }), datasets: [{ label: 'Logro promedio', data: d.serie.map(function (s) { return s.resumen.pctPromedio; }), borderColor: '#2a78d6', backgroundColor: '#2a78d6', borderWidth: 2, pointRadius: 5, pointHoverRadius: 7, tension: 0 }] },
+        options: Object.assign(opcionesBase({ y: { min: 0, max: 100, ticks: { callback: function (v) { return v + ' %'; } } } }, false, function (ctx) { return ' ' + num(ctx.parsed.y) + ' %'; }), { interaction: { mode: 'index', intersect: false } }) }));
+    } catch (e) { errorToast(e); }
+  };
+}
+
+/* =====================================================================
+ *  REMEDIALES
+ * ===================================================================== */
+async function vRemediales(p) {
+  const lista = await evaluaciones(true);
+  let h = cabecera('Remediales', 'Plan remedial automático a partir de las preguntas y OA con logro bajo el umbral definido. Se basa exclusivamente en los OA, indicadores y habilidades registrados en la matriz.', '<button class="btn" id="rm-xls" disabled>Descargar Excel</button><button class="btn" onclick="window.print()">Imprimir / PDF</button>');
+  h += '<div class="filtros"><div style="flex:1;min-width:280px"><label>Evaluación</label><select id="rm-eval">' + opcionesEval(lista, p.evalId) + '</select></div><div><label>Curso</label><select id="rm-curso"></select></div><div style="min-width:auto"><label>&nbsp;</label><button class="btn prim" id="rm-gen">Generar remedial</button></div></div><div id="rm-res"></div>';
+  $('principal').innerHTML = h;
+  const selE = $('rm-eval'), selC = $('rm-curso');
+  function cursos() { const ev = lista.find(function (e) { return e.id === selE.value; }); selC.innerHTML = opcionesCurso(cursosPara(ev), p.curso, true); }
+  selE.onchange = cursos; cursos();
+  $('rm-gen').onclick = generarRemedial;
+  if (p.evalId) generarRemedial();
+}
+async function generarRemedial() {
+  if (!$('rm-eval').value || !$('rm-curso').value) { toast('Seleccione evaluación y curso.', 'error'); return; }
+  try {
+    const d = await api('remedial', { evalId: $('rm-eval').value, curso: $('rm-curso').value });
+    S.cache.rem = d;
+    $('rm-xls').disabled = false; $('rm-xls').onclick = function () { exportarRemedial(d).catch(errorToast); };
+    const c = d.config, rs = d.resumen;
+    let h = '<div class="panel doc-remedial">';
+    h += '<p style="margin:0 0 4px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em">' + esc(String(S.cat.colegio).toUpperCase()) + ' · UNIDAD TÉCNICO PEDAGÓGICA</p><h2>Plan remedial · ' + esc(d.evaluacion.nombre) + '</h2>';
+    h += '<p style="margin:0 0 14px;color:var(--text-2)">' + esc(d.evaluacion.tipo) + ' · ' + esc(d.evaluacion.asignatura) + ' · ' + d.cursos.join(', ') + ' · Aplicación: ' + fechaTxt(d.evaluacion.fecha) + ' · Criterio: pregunta u OA con logro &lt; ' + c.umbralRemedial + ' % (crítico &lt; ' + c.umbralCritico + ' %)</p>';
+    if (d.evaluacion.estadoMatriz !== 'Validada') h += '<div class="aviso advertencia"><b>Plan preliminar:</b> la matriz de esta evaluación aún no ha sido validada por UTP. Verifique claves y OA antes de aplicar las acciones.</div>';
+    h += '<div class="kpis"><div class="kpi"><span>Logro promedio</span><b>' + pct(rs.pctPromedio) + '</b>' + chip(rs.nivel) + '</div><div class="kpi"><span>Evaluados</span><b>' + rs.rendidas + '</b></div><div class="kpi"><span>Preguntas descendidas</span><b>' + d.preguntasDescendidas.length + '</b><small>de ' + d.totalPreguntas + ' preguntas</small></div><div class="kpi"><span>OA descendidos</span><b>' + d.oaDescendidos.length + '</b><small>de ' + (d.oaDescendidos.length + d.oaLogrados.length) + '</small></div><div class="kpi"><span>Acciones remediales</span><b>' + d.acciones.length + '</b></div></div>';
+    if (!d.acciones.length) {
+      h += '<div class="aviso">No hay preguntas con logro bajo el ' + c.umbralRemedial + ' %. Se sugiere mantener la planificación y aplicar desafíos de profundización para el grupo de nivel Adecuado.</div>';
+    } else {
+      h += '<h3 style="margin:18px 0 8px">1. Diagnóstico: OA y preguntas descendidas</h3>' + (d.oaDescendidos.length ? '' : '<div class="aviso">Ningún OA tiene un logro promedio bajo el ' + c.umbralRemedial + ' %. Las brechas se concentran en las preguntas específicas que se detallan a continuación.</div>') + '<div class="tabla-cont' + (d.oaDescendidos.length ? '' : ' hidden') + '" style="margin-bottom:14px"><table><thead><tr><th>OA</th><th style="min-width:150px">Logro</th><th>Nivel</th><th>Preguntas</th><th>Habilidades</th></tr></thead><tbody>' +
+        d.oaDescendidos.map(function (g) { return '<tr><td><b>' + esc(g.nombre) + '</b>' + (g.critico ? ' <span class="chip alerta">Crítico</span>' : '') + '</td><td>' + barra(g.pct, c.umbralRemedial) + '</td><td>' + chip(g.nivel) + '</td><td>' + g.preguntas.map(function (x) { return 'P' + x; }).join(', ') + '</td><td>' + esc(g.habilidades.join(' · ')) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+      h += '<div class="tabla-cont"><table><thead><tr><th>Pregunta</th><th style="min-width:150px">Logro</th><th>OA</th><th>Habilidad</th><th>Indicador</th><th>Clave</th><th>Distractor más elegido</th></tr></thead><tbody>' +
+        d.preguntasDescendidas.map(function (q) { return '<tr><td><b>P' + q.pregunta + '</b></td><td>' + barra(q.pct, c.umbralRemedial) + '</td><td>' + esc(q.oa) + '</td><td>' + esc(q.habilidad) + '</td><td>' + esc(q.indicador) + '</td><td>' + (q.tipo === 'SM' ? q.clave : 'Abierta') + '</td><td>' + (q.distractor ? q.distractor + ' (' + num(q.distractorPct) + ' %)' : '—') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+      h += '<h3 style="margin:22px 0 8px">2. Acciones remediales (ordenadas por prioridad)</h3>';
+      d.acciones.forEach(function (a, i) {
+        h += '<div class="bloque"><h3><span>Acción ' + (i + 1) + ' · ' + esc(a.oa) + '</span><span class="chip ' + (a.prioridad === 'Crítica' ? 'alerta' : 'Elemental') + '">Prioridad ' + a.prioridad.toLowerCase() + '</span><span class="chip neutro">' + pct(a.pct) + ' de logro</span></h3>';
+        h += '<dl><dt>Indicador de evaluación</dt><dd>' + esc(a.indicador) + '</dd><dt>Habilidad</dt><dd>' + esc(a.habilidad) + ' — foco: ' + esc(a.foco) + '</dd><dt>Preguntas asociadas</dt><dd>' + a.preguntas.map(function (x) { return 'P' + x; }).join(', ') + '</dd><dt>Duración sugerida</dt><dd>' + a.sesiones + ' sesión(es) de 45 minutos</dd>';
+        h += '<dt>Análisis del error</dt><dd><ul>' + a.errores.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></dd>';
+        h += '<dt>Secuencia didáctica</dt><dd><ol>' + a.secuencia.map(function (s) { return '<li><b>' + esc(s.momento) + ':</b> ' + esc(s.descripcion) + '</li>'; }).join('') + '</ol></dd>';
+        h += '<dt>Diseño Universal (DUA)</dt><dd><ul><li><b>Representación:</b> ' + esc(a.dua.representacion) + '</li><li><b>Compromiso:</b> ' + esc(a.dua.compromiso) + '</li><li><b>Acción y expresión:</b> ' + esc(a.dua.accionExpresion) + '</li></ul></dd>';
+        h += '<dt>Verificación del logro</dt><dd>' + esc(a.verificacion) + '</dd>';
+        h += '<dt>Estudiantes priorizados (' + a.estudiantes.length + ')</dt><dd style="font-size:13px">' + (a.estudiantes.length ? a.estudiantes.map(function (e) { return esc(e.nombre) + (d.cursos.length > 1 ? ' (' + e.curso + ')' : '') + (e.pie === 'SI' ? ' [PIE]' : ''); }).join(' · ') : '—') + '<br><small style="color:var(--muted)">Obtuvieron menos del 50 % del puntaje en las preguntas de esta acción.</small></dd></dl></div>';
+      });
+    }
+    h += '<h3 style="margin:22px 0 8px">3. Agrupación del curso para el trabajo remedial</h3><div class="rejilla">';
+    NIVELES.forEach(function (n) {
+      const g = d.agrupacion[n];
+      h += '<div class="bloque" style="margin:0"><h3>' + chip(n) + ' <span>' + g.estudiantes.length + ' estudiantes</span></h3><p style="margin:0 0 8px;font-size:13px;color:var(--text-2)">' + esc(g.estrategia) + '</p><div style="font-size:13px">' + (g.estudiantes.length ? g.estudiantes.map(function (e) { return esc(e.nombre) + ' <small style="color:var(--muted)">(' + num(e.pct, 0) + ' % · ' + notaTxt(e.nota) + ')</small>' + (e.pie === 'SI' ? ' <span class="marca-pie">PIE</span>' : ''); }).join('<br>') : '—') + '</div></div>';
+    });
+    h += '</div>';
+    h += '<div class="aviso" style="margin-top:16px">Los estudiantes PIE requieren coordinación con la educadora diferencial para aplicar las adecuaciones definidas en su PACI (Decreto N°83 y Decreto N°170). Se sugiere reevaluar los indicadores descendidos en un plazo máximo de 3 semanas y registrar el avance en el monitoreo PME.</div>';
+    h += '</div>';
+    $('rm-res').innerHTML = h;
+  } catch (e) { $('rm-res').innerHTML = '<div class="aviso error">' + esc(e.message) + '</div>'; }
+}
+async function exportarRemedial(d) {
+  const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Plan remedial');
+  const tit = ['N°', 'Prioridad', 'OA', 'Indicador', 'Habilidad', 'Logro', 'Preguntas', 'Análisis del error', 'Modelamiento', 'Práctica guiada', 'Práctica autónoma', 'DUA · Representación', 'DUA · Compromiso', 'DUA · Acción y expresión', 'Sesiones', 'Verificación', 'Estudiantes priorizados'];
+  ws.columns = tit.map(function (t, i) { return { width: [5, 10, 12, 34, 18, 9, 12, 46, 46, 46, 46, 36, 36, 36, 9, 46, 46][i] }; });
+  let f = encabezadoInstitucional(ws, 'Plan remedial · ' + d.evaluacion.nombre, [d.evaluacion.tipo + ' · ' + d.evaluacion.asignatura + ' · ' + d.cursos.join(', ') + ' · Criterio: logro < ' + d.config.umbralRemedial + ' %', 'Logro promedio: ' + num(d.resumen.pctPromedio) + ' % · Evaluados: ' + d.resumen.rendidas + ' · Generado: ' + new Date().toLocaleString('es-CL')], 10);
+  filaEncabezado(ws, f, tit);
+  d.acciones.forEach(function (a, i) {
+    f++;
+    const r = filaDatos(ws, f, [i + 1, a.prioridad, a.oa, a.indicador, a.habilidad, a.pct / 100, a.preguntas.map(function (x) { return 'P' + x; }).join(', '), a.errores.join('\n'), a.secuencia[0].descripcion, a.secuencia[1].descripcion, a.secuencia[2].descripcion,
+      a.dua.representacion, a.dua.compromiso, a.dua.accionExpresion, a.sesiones, a.verificacion, a.estudiantes.map(function (e) { return e.nombre + (e.pie === 'SI' ? ' [PIE]' : ''); }).join(', ')], [null, null, null, null, null, '0.0%']);
+    r.eachCell(function (c) { c.alignment = { wrapText: true, vertical: 'top' }; });
+  });
+  const wg = wb.addWorksheet('Agrupación');
+  wg.columns = [{ width: 14 }, { width: 38 }, { width: 10 }, { width: 10 }, { width: 8 }];
+  let g = encabezadoInstitucional(wg, 'Agrupación por nivel de desempeño', [d.evaluacion.nombre + ' · ' + d.cursos.join(', ')], 5);
+  filaEncabezado(wg, g, ['Nivel', 'Estudiante', '% logro', 'Nota', 'PIE']);
+  NIVELES.forEach(function (n) {
+    d.agrupacion[n].estudiantes.forEach(function (e) { g++; const r = filaDatos(wg, g, [n, e.nombre, e.pct / 100, e.nota, e.pie === 'SI' ? 'Sí' : ''], [null, null, '0.0%', '0.0']); pintarNivel(r.getCell(1), n); });
+  });
+  await guardarLibro(wb, 'Remedial_' + nombreArchivo(d.evaluacion.nombre) + '_' + nombreArchivo(d.cursos.length > 1 ? 'nivel' : d.cursos[0]) + '.xlsx');
+}
+
+/* =====================================================================
+ *  USUARIOS
+ * ===================================================================== */
+async function vUsuarios() {
+  const lista = await api('listarUsuarios', {});
+  let h = cabecera('Usuarios y accesos', 'Cada docente accede solo a los cursos y asignaturas asignados. Las claves se almacenan cifradas; al crear o restablecer, se entrega una clave temporal que el usuario debe cambiar en su primer ingreso.', '<button class="btn prim" onclick="editarUsuario()">+ Usuario</button>');
+  h += '<div class="panel"><div class="filtros" style="margin-bottom:10px"><div><label>Buscar</label><input placeholder="Nombre o usuario" oninput="filtrarTabla(\'t-us\',this.value)"></div></div><div class="tabla-cont"><table id="t-us"><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Cursos asignados</th><th>Último ingreso</th><th>Estado</th><th></th></tr></thead><tbody>' +
+    lista.map(function (u) {
+      const asig = u.rol === 'docente' ? (u.asignaciones.length ? u.asignaciones.map(function (a) { return a.curso + ' · ' + (a.asignatura === '*' ? 'Todas' : a.asignatura); }).join('<br>') : '<span class="chip alerta">Sin cursos</span>') : '<span style="color:var(--muted)">Todos</span>';
+      return '<tr><td>' + esc(u.nombre) + (u.correo ? '<br><small style="color:var(--muted)">' + esc(u.correo) + '</small>' : '') + '</td><td>' + esc(u.usuario) + '</td><td>' + esc(ROL_TXT[u.rol]) + '</td><td style="font-size:12px">' + asig + '</td><td>' + (u.ultimoIngreso || '<span style="color:var(--muted)">Nunca</span>') + (u.debeCambiar === 'SI' ? '<br><small style="color:#8a5a00">Clave temporal pendiente</small>' : '') + '</td><td>' + (u.activo === 'SI' ? '<span class="chip Adecuado">Activo</span>' : '<span class="chip neutro">Inactivo</span>') + '</td>' +
+        '<td style="white-space:nowrap"><button class="btn mini" onclick=\'editarUsuario(' + JSON.stringify(u).replace(/'/g, '&#39;') + ')\'>Editar</button> <button class="btn mini" onclick="restablecer(\'' + u.id + '\')">Restablecer clave</button></td></tr>';
+    }).join('') + '</tbody></table></div></div>';
+  $('principal').innerHTML = h;
+}
+function editarUsuario(u) {
+  u = u || { nombre: '', usuario: '', correo: '', rol: 'docente', asignaciones: [], activo: 'SI' };
+  let asig = (u.asignaciones || []).slice();
+  const cursos = S.cat.todosLosCursos || S.cat.cursos;
+  modal(u.id ? 'Editar usuario' : 'Nuevo usuario',
+    '<div class="form"><div><label>Nombre completo</label><input id="u-nombre" value="' + esc(u.nombre) + '"></div><div><label>Usuario de acceso</label><input id="u-usuario" value="' + esc(u.usuario) + '" placeholder="nombre.apellido"></div>' +
+    '<div><label>Correo (opcional)</label><input id="u-correo" type="email" value="' + esc(u.correo) + '"></div><div><label>Rol</label><select id="u-rol">' + ['docente', 'directivo', 'admin'].map(function (r) { return '<option value="' + r + '"' + (r === u.rol ? ' selected' : '') + '>' + ROL_TXT[r] + '</option>'; }).join('') + '</select></div>' +
+    '<div><label>Estado</label><select id="u-activo"><option value="SI">Activo</option><option value="NO"' + (u.activo === 'NO' ? ' selected' : '') + '>Inactivo (sin acceso)</option></select></div></div>' +
+    '<div id="u-asig-box" style="margin-top:16px"><h3 style="margin-bottom:8px">Cursos y asignaturas asignados</h3><div class="filtros" style="margin-bottom:8px"><div><label>Curso</label><select id="u-c">' + cursos.map(function (c) { return '<option>' + c + '</option>'; }).join('') + '</select></div><div style="min-width:240px"><label>Asignatura</label><select id="u-a"><option value="*">Todas (profesor jefe / generalista)</option>' + S.cat.asignaturas.map(function (a) { return '<option>' + esc(a) + '</option>'; }).join('') + '</select></div><div style="min-width:auto"><label>&nbsp;</label><button class="btn" id="u-add">Agregar</button></div></div><div id="u-lista"></div></div>',
+    '<button class="btn" onclick="cerrarModal()">Cancelar</button><button class="btn prim" id="u-guardar">Guardar</button>', true);
+  function pintar() {
+    $('u-asig-box').style.display = $('u-rol').value === 'docente' ? '' : 'none';
+    $('u-lista').innerHTML = asig.length ? '<div class="tabla-cont"><table><tbody>' + asig.map(function (a, i) { return '<tr><td>' + a.curso + '</td><td>' + (a.asignatura === '*' ? 'Todas las asignaturas' : esc(a.asignatura)) + '</td><td style="text-align:right"><button class="btn mini peligro" data-i="' + i + '">Quitar</button></td></tr>'; }).join('') + '</tbody></table></div>' : '<div class="aviso advertencia">Sin cursos asignados: el docente no podrá ver resultados.</div>';
+    $('u-lista').querySelectorAll('button').forEach(function (b) { b.onclick = function () { asig.splice(Number(b.dataset.i), 1); pintar(); }; });
+  }
+  $('u-rol').onchange = pintar;
+  $('u-add').onclick = function () { const a = { curso: $('u-c').value, asignatura: $('u-a').value }; if (!asig.some(function (x) { return x.curso === a.curso && x.asignatura === a.asignatura; })) asig.push(a); pintar(); };
+  pintar();
+  $('u-guardar').onclick = async function () {
+    try {
+      const r = await api('guardarUsuario', { id: u.id, nombre: $('u-nombre').value, usuario: $('u-usuario').value, correo: $('u-correo').value, rol: $('u-rol').value, activo: $('u-activo').value, asignaciones: $('u-rol').value === 'docente' ? asig : [] });
+      cerrarModal();
+      if (r.claveTemporal) mostrarClave(r.usuario.usuario, r.claveTemporal); else toast('Usuario actualizado.', 'ok');
+      vUsuarios();
+    } catch (e) { errorToast(e); }
+  };
+}
+function mostrarClave(usuario, clave) {
+  modal('Clave temporal', '<p>Entregue estos datos al usuario de forma personal. La clave se muestra <b>solo una vez</b> y deberá cambiarla en su primer ingreso.</p><div class="kpis"><div class="kpi"><span>Usuario</span><b style="font-size:20px">' + esc(usuario) + '</b></div><div class="kpi"><span>Clave temporal</span><b style="font-size:20px;font-family:monospace">' + esc(clave) + '</b></div></div>', '<button class="btn prim" onclick="cerrarModal()">Entendido</button>');
+}
+async function restablecer(id) {
+  if (!await confirmar('Restablecer clave', 'Se generará una nueva clave temporal y la clave actual dejará de funcionar.', 'Restablecer')) return;
+  try { const r = await api('restablecerClave', { id: id }); mostrarClave(r.usuario, r.claveTemporal); vUsuarios(); } catch (e) { errorToast(e); }
+}
+
+/* =====================================================================
+ *  PERMISOS DE DOCENTES
+ * ===================================================================== */
+const PERM_TXT = {
+  crearEval: ['Crear evaluaciones', 'Los docentes crean evaluaciones propias para su nivel y asignatura, y las editan o eliminan mientras no tengan respuestas.'],
+  matriz: ['Cargar matrices', 'Los docentes cargan o editan matrices de su nivel y asignatura que aún no han sido validadas por UTP.'],
+  respuestas: ['Cargar respuestas y eximir', 'Los docentes suben planillas de respuestas y registran eximiciones en sus cursos asignados.']
+};
+async function vPermisos() {
+  const d = await api('listarPermisos', {});
+  const claves = Object.keys(PERM_TXT);
+  let h = cabecera('Permisos docentes', 'Habilite o bloquee lo que pueden hacer los docentes. El interruptor general aplica a todos; el bloqueo individual afecta solo al docente indicado. Ver resultados de sus cursos siempre está permitido.', '<button class="btn prim" id="pm-guardar">Guardar permisos</button>');
+  h += '<div class="panel"><h3>Interruptores generales</h3><div class="sub">Útil para abrir o cerrar períodos (por ejemplo, cerrar la carga de respuestas al terminar el plazo).</div>' +
+    claves.map(function (k) { return '<div class="interruptor"><div><b>' + PERM_TXT[k][0] + '</b><small>' + PERM_TXT[k][1] + '</small></div><label class="sw" aria-label="' + PERM_TXT[k][0] + '"><input type="checkbox" data-g="' + k + '"' + (d.general[k] ? ' checked' : '') + '><span></span></label></div>'; }).join('') + '</div>';
+  h += '<div class="panel"><h3>Permisos por docente</h3><div class="sub">Desmarque para bloquear a un docente específico. «Efectivo» indica lo que el docente puede hacer considerando también el interruptor general.</div>';
+  h += d.docentes.length ? '<div class="filtros" style="margin-bottom:10px"><div><label>Buscar</label><input placeholder="Nombre o usuario" oninput="filtrarTabla(\'t-perm\',this.value)"></div></div><div class="tabla-cont" style="max-height:60vh"><table id="t-perm"><thead><tr><th>Docente</th>' + claves.map(function (k) { return '<th class="cen">' + PERM_TXT[k][0] + '</th>'; }).join('') + '</tr></thead><tbody>' +
+    d.docentes.map(function (u) {
+      return '<tr><td>' + esc(u.nombre) + '<br><small style="color:var(--muted)">' + esc(u.usuario) + (u.activo !== 'SI' ? ' · inactivo' : '') + '</small></td>' + claves.map(function (k) {
+        return '<td class="cen"><label class="sw" style="display:inline-block;vertical-align:middle" aria-label="' + PERM_TXT[k][0] + ' para ' + esc(u.nombre) + '"><input type="checkbox" data-u="' + u.id + '" data-k="' + k + '"' + (u.individual[k] ? ' checked' : '') + '><span></span></label><br><span class="estado-perm" data-ef="' + u.id + '-' + k + '"></span></td>';
+      }).join('') + '</tr>';
+    }).join('') + '</tbody></table></div>' : '<div class="vacio">No hay docentes registrados.</div>';
+  h += '</div>';
+  $('principal').innerHTML = h;
+  function efectivos() {
+    document.querySelectorAll('[data-ef]').forEach(function (el) {
+      const partes = el.dataset.ef.split('-'), k = partes.pop(), id = partes.join('-');
+      const g = document.querySelector('[data-g="' + k + '"]').checked, i = document.querySelector('[data-u="' + id + '"][data-k="' + k + '"]').checked;
+      el.textContent = g && i ? 'Efectivo: sí' : 'Efectivo: no';
+      el.style.color = g && i ? '#126b12' : '#a12626';
+    });
+  }
+  document.querySelectorAll('.sw input').forEach(function (i) { i.onchange = efectivos; });
+  efectivos();
+  $('pm-guardar').onclick = async function () {
+    const general = {}, usuarios = {};
+    document.querySelectorAll('[data-g]').forEach(function (i) { general[i.dataset.g] = i.checked; });
+    document.querySelectorAll('[data-u]').forEach(function (i) { (usuarios[i.dataset.u] = usuarios[i.dataset.u] || {})[i.dataset.k] = i.checked; });
+    try { await api('guardarPermisos', { general: general, usuarios: usuarios }); S.cat = await api('catalogos', {}, true); toast('Permisos guardados. Se aplican de inmediato.', 'ok'); vPermisos(); } catch (e) { errorToast(e); }
+  };
+}
+
+/* =====================================================================
+ *  CONFIGURACIÓN DE ESCALA
+ * ===================================================================== */
+async function vConfiguracion() {
+  S.cat = await api('catalogos', {});
+  const c = S.cat.config;
+  const campo = function (id, t, v, ayuda, paso) { return '<div><label>' + t + '</label><input id="cf-' + id + '" type="number" step="' + (paso || 1) + '" value="' + v + '">' + (ayuda ? '<small style="color:var(--muted)">' + ayuda + '</small>' : '') + '</div>'; };
+  let h = cabecera('Configuración del establecimiento', 'Parámetros institucionales aplicados a todos los cálculos. Deben coincidir con el Reglamento de Evaluación (Decreto N°67).', '<button class="btn prim" id="cf-guardar">Guardar configuración</button>');
+  const inst = S.cat.institucion || {};
+  h += '<div class="panel"><h3>Datos del establecimiento</h3><div class="sub">Aparecen en el encabezado de la plataforma, los reportes Excel y los planes remediales.</div><div class="form"><div class="full"><label>Nombre del establecimiento</label><input id="cft-nombreColegio" value="' + esc(inst.nombreColegio || S.cat.colegio) + '"></div><div><label>RBD</label><input id="cft-rbd" value="' + esc(inst.rbd || '') + '"></div><div><label>Comuna</label><input id="cft-comuna" value="' + esc(inst.comuna || '') + '"></div></div></div>';
+  h += '<div class="rejilla"><div class="panel"><h3>Escala de notas</h3><div class="form">' + campo('exigencia', 'Exigencia (%)', c.exigencia, 'Porcentaje de logro que equivale a la nota de aprobación') + campo('notaAprob', 'Nota de aprobación', c.notaAprob, '', 0.1) + campo('notaMin', 'Nota mínima', c.notaMin, '', 0.1) + campo('notaMax', 'Nota máxima', c.notaMax, '', 0.1) + '</div></div>' +
+    '<div class="panel"><h3>Niveles de desempeño (por % de logro)</h3><div class="form">' + campo('limiteElemental', 'Elemental desde (%)', c.limiteElemental, 'Bajo este valor: Insuficiente') + campo('limiteAdecuado', 'Adecuado desde (%)', c.limiteAdecuado, 'Desde este valor: Adecuado') + '</div><h3 style="margin:16px 0 8px">Remediales</h3><div class="form">' + campo('umbralRemedial', 'Remedial bajo (%)', c.umbralRemedial, 'Pregunta u OA bajo este logro') + campo('umbralCritico', 'Crítico bajo (%)', c.umbralCritico, 'Prioridad crítica') + '</div></div></div>';
+  h += '<div class="panel"><h3>Vista previa de la escala</h3><div class="sub">Equivalencia entre porcentaje de logro, nota y nivel con los valores ingresados (antes de guardar).</div><div id="cf-prev"></div></div>';
+  $('principal').innerHTML = h;
+  function leer() {
+    const o = {}; Object.keys(c).forEach(function (k) { const el = $('cf-' + k); o[k] = el ? Number(String(el.value).replace(',', '.')) : c[k]; });
+    ['nombreColegio', 'rbd', 'comuna'].forEach(function (k) { o[k] = $('cft-' + k).value; });
+    return o;
+  }
+  function prev() {
+    const o = leer(), filas = [];
+    for (let p = 0; p <= 100; p += 5) {
+      const pa = o.exigencia; let n = p < pa ? o.notaMin + (o.notaAprob - o.notaMin) * (p / pa) : (pa === 100 ? o.notaMax : o.notaAprob + (o.notaMax - o.notaAprob) * ((p - pa) / (100 - pa)));
+      n = Math.max(o.notaMin, Math.min(o.notaMax, Math.round((n + 1e-9) * 10) / 10));
+      const nv = p >= o.limiteAdecuado ? 'Adecuado' : p >= o.limiteElemental ? 'Elemental' : 'Insuficiente';
+      filas.push('<tr><td class="num">' + p + ' %</td><td class="num"><b style="color:' + (n < o.notaAprob ? '#a12626' : 'inherit') + '">' + num(n) + '</b></td><td>' + chip(nv) + '</td><td>' + (p < o.umbralRemedial ? (p < o.umbralCritico ? '<span class="chip alerta">Crítico</span>' : 'Remedial') : '') + '</td></tr>');
+    }
+    $('cf-prev').innerHTML = '<div class="tabla-cont" style="max-height:420px"><table><thead><tr><th class="num">% logro</th><th class="num">Nota</th><th>Nivel</th><th>Remedial</th></tr></thead><tbody>' + filas.join('') + '</tbody></table></div>';
+  }
+  document.querySelectorAll('[id^="cf-"]').forEach(function (el) { if (el.tagName === 'INPUT') el.oninput = prev; });
+  prev();
+  $('cf-guardar').onclick = async function () {
+    try { await api('guardarConfig', leer()); S.cat = await api('catalogos', {}, true); $('cab-colegio').textContent = S.cat.colegio; toast('Configuración guardada. Los resultados se recalculan con la nueva escala.', 'ok'); } catch (e) { errorToast(e); }
+  };
+}
+
+/* =====================================================================
+ *  BITÁCORA Y CUENTA
+ * ===================================================================== */
+async function vBitacora(p) {
+  const lista = await api('listarUsuarios', {}, true).catch(function () { return []; });
+  let h = cabecera('Bitácora de actividad', 'Registro de ingresos y de todo cambio de datos (cargas, eximiciones, matrices, permisos y usuarios). Las consultas de resultados no se registran para mantener la base liviana.', '<button class="btn" id="bt-xls">Descargar Excel</button>');
+  h += '<div class="filtros"><div><label>Usuario</label><select id="bt-u"><option value="">Todos</option>' + lista.map(function (u) { return '<option value="' + esc(u.usuario) + '">' + esc(u.nombre) + ' (' + esc(u.usuario) + ')</option>'; }).join('') + '</select></div><div><label>Acción contiene</label><input id="bt-a" placeholder="Carga, Ingreso…"></div><div><label>Desde</label><input id="bt-d" type="date"></div><div><label>Hasta</label><input id="bt-h" type="date"></div><div style="min-width:auto"><label>&nbsp;</label><button class="btn prim" id="bt-ver">Filtrar</button></div></div><div id="bt-res"></div>';
+  $('principal').innerHTML = h;
+  let ultimo = [];
+  async function ver() {
+    try {
+      const d = await api('bitacora', { usuario: $('bt-u').value, accion: $('bt-a').value, desde: $('bt-d').value, hasta: $('bt-h').value, limite: 1000 });
+      ultimo = d.filas;
+      $('bt-res').innerHTML = '<div class="panel"><div class="sub" style="margin:0 0 10px">' + d.total + ' registros' + (d.total > d.filas.length ? ' (se muestran los ' + d.filas.length + ' más recientes)' : '') + '</div><div class="tabla-cont" style="max-height:64vh"><table><thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Rol</th><th>Acción</th><th>Detalle</th></tr></thead><tbody>' +
+        d.filas.map(function (f) { return '<tr><td style="white-space:nowrap">' + esc(f.fecha) + '</td><td>' + esc(f.usuario) + '</td><td>' + esc(f.rol) + '</td><td><b>' + esc(f.accion) + '</b></td><td style="font-size:12px">' + esc(f.detalle) + '</td></tr>'; }).join('') + '</tbody></table></div></div>';
+    } catch (e) { errorToast(e); }
+  }
+  $('bt-ver').onclick = ver;
+  $('bt-xls').onclick = async function () {
+    const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Bitácora');
+    ws.columns = [{ width: 20 }, { width: 16 }, { width: 12 }, { width: 26 }, { width: 80 }];
+    let f = encabezadoInstitucional(ws, 'Bitácora de actividad', ['Generado: ' + new Date().toLocaleString('es-CL')], 5);
+    filaEncabezado(ws, f, ['Fecha', 'Usuario', 'Rol', 'Acción', 'Detalle']);
+    ultimo.forEach(function (x) { f++; filaDatos(ws, f, [x.fecha, x.usuario, x.rol, x.accion, x.detalle]); });
+    await guardarLibro(wb, 'Bitacora_' + hoyISO() + '.xlsx');
+  };
+  ver();
+}
+function vCuenta() {
+  const u = S.user;
+  let h = cabecera('Mi cuenta', '');
+  h += '<div class="rejilla"><div class="panel"><h3>Datos de acceso</h3><dl style="display:grid;grid-template-columns:140px 1fr;gap:8px;margin:0"><dt style="color:var(--text-2)">Nombre</dt><dd style="margin:0">' + esc(u.nombre) + '</dd><dt style="color:var(--text-2)">Usuario</dt><dd style="margin:0">' + esc(u.usuario) + '</dd><dt style="color:var(--text-2)">Rol</dt><dd style="margin:0">' + esc(ROL_TXT[u.rol]) + '</dd><dt style="color:var(--text-2)">Último ingreso</dt><dd style="margin:0">' + esc(u.ultimoIngreso || '—') + '</dd>' +
+    (u.rol === 'docente' ? '<dt style="color:var(--text-2)">Cursos</dt><dd style="margin:0">' + (u.asignaciones.map(function (a) { return a.curso + ' · ' + (a.asignatura === '*' ? 'Todas' : esc(a.asignatura)); }).join('<br>') || '—') + '</dd>' : '') + '</dl></div>' +
+    '<div class="panel"><h3>Cambiar clave</h3><div class="form"><div class="full"><label>Clave actual</label><input id="mc-a" type="password"></div><div><label>Nueva clave</label><input id="mc-n" type="password"></div><div><label>Repita la nueva clave</label><input id="mc-n2" type="password"></div></div><button class="btn prim" style="margin-top:12px" id="mc-ok">Cambiar clave</button></div></div>';
+  $('principal').innerHTML = h;
+  $('mc-ok').onclick = async function () {
+    if ($('mc-n').value !== $('mc-n2').value) { toast('Las claves nuevas no coinciden.', 'error'); return; }
+    try { S.user = await api('cambiarClave', { actual: $('mc-a').value, nueva: $('mc-n').value }); toast('Clave actualizada.', 'ok'); vCuenta(); } catch (e) { errorToast(e); }
+  };
+}
+
+/* =====================================================================
+ *  ARRANQUE
+ * ===================================================================== */
+/* Herramienta UTP360 para registrar un colegio: abrir la página con ?registrar=1 */
+function vistaRegistro() {
+  $('acceso').classList.remove('hidden');
+  document.querySelector('.tarjeta-acceso').innerHTML = '<h1>Registrar establecimiento</h1><p>Genere la línea que se agrega a <b>colegios.json</b>. El código queda cifrado: el archivo no revela qué colegios son clientes.</p>' +
+    '<div class="campo"><label>Código de acceso del colegio (ej.: montessori)</label><input id="g-codigo" style="width:100%"></div>' +
+    '<div class="campo"><label>URL de la aplicación web del colegio (termina en /exec)</label><input id="g-url" style="width:100%" placeholder="https://script.google.com/macros/s/…/exec"></div>' +
+    '<button class="btn prim" id="g-ok" style="width:100%;justify-content:center">Generar línea</button><pre id="g-res" style="white-space:pre-wrap;word-break:break-all;background:#f3f6fa;border-radius:8px;padding:10px;font-size:12px;margin-top:14px"></pre>';
+  $('g-ok').onclick = async function () {
+    const c = normCodigo($('g-codigo').value), u = $('g-url').value.trim();
+    if (!c || !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(u)) { $('g-res').textContent = 'Revise el código y la URL (debe terminar en /exec).'; return; }
+    $('g-res').textContent = 'Código normalizado: ' + c + '\n\nAgregue esta línea dentro de "colegios": { … } en colegios.json:\n\n"' + await sha256(c) + '": "' + u + '"';
+  };
+}
+
+(async function () {
+  if (MODO_PORTAL && new URLSearchParams(location.search).get('registrar')) { vistaRegistro(); return; }
+  // Ingreso único desde el panel UTP360: la dirección trae #sso=<pase firmado>
+  const mSso = /[#&]sso=([^&]+)/.exec(location.hash || '');
+  if (MODO_PORTAL && mSso) {
+    const pase = decodeURIComponent(mSso[1]);
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+    try {
+      cargando(true);
+      try { S.apiUrl = await resolverColegio(new URLSearchParams(location.search).get('c') || ''); } finally { cargando(false); }
+      const r = await api('loginSSO', { token: pase });
+      S.token = r.token; S.user = r.usuario; guardarSesion(r.token);
+      await iniciarApp();
+      if (r.ingresoAnterior) toast('Bienvenido(a). Último ingreso: ' + r.ingresoAnterior);
+      return;
+    } catch (e) {
+      salirLocal(e.message && e.message !== 'SESION_EXPIRADA' ? e.message : '');
+      return;
+    }
+  }
+  S.token = leerSesion();
+  if (!S.token) { mostrarAcceso(); return; }
+  try { await iniciarApp(); } catch (e) { if (e.message !== 'DEBE_CAMBIAR_CLAVE') salirLocal(); }
+})();
+</script>
+</body>
+</html>
