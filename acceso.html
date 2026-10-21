@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Acceso a clientes — UTP360</title>
-<meta name="description" content="Ingresa tu código de acceso para entrar a tu herramienta UTP360.">
+<title>Acceso a la plataforma — UTP360</title>
+<meta name="description" content="Ingresa con tu código personal para entrar a tu espacio en la plataforma UTP360.">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,7 +44,7 @@
   p{margin:0;}
   a{color:inherit;text-decoration:none;}
   img{max-width:100%;display:block;}
-  .wrap{max-width:560px;margin:0 auto;padding:0 24px;}
+  .wrap{max-width:720px;margin:0 auto;padding:0 24px;}
 
   header{padding:22px 0;border-bottom:1px solid var(--border);}
   .header-row{max-width:1160px;margin:0 auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;}
@@ -123,6 +123,22 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   @media (prefers-reduced-motion: reduce){ .spinner{animation:none;} }
 
+
+  .acct-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .acct-type{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;padding:5px 12px;border-radius:100px;background:color-mix(in srgb, var(--olive) 16%, transparent);color:var(--olive-dark);margin-bottom:12px;}
+  .acct-name{margin-top:4px;color:var(--text-muted);font-size:15px;}
+  .seats{margin-top:14px;font-size:13.5px;color:var(--text-muted);}
+  .seats strong{color:var(--text);}
+  .tools-title{font-family:'Montserrat';font-weight:800;font-size:17px;margin:26px 0 12px;}
+  .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+  .tool{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--paper);display:flex;flex-direction:column;gap:12px;}
+  .tool .p-tag{margin-bottom:0;align-self:flex-start;}
+  .tool .tool-state{font-size:13px;color:var(--text-muted);font-weight:600;}
+  .tool-open{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:100px;font-weight:700;font-size:14px;background:var(--ink);color:var(--paper);transition:background .15s;}
+  .tool-open:hover{background:var(--olive-dark);}
+  .tool.locked{opacity:.62;border-style:dashed;}
+  .tool.locked .tool-open{background:transparent;color:var(--text-muted);border:1px solid var(--border);}
+
   footer{padding:36px 0;border-top:1px solid var(--border);text-align:center;}
   .foot-copy{font-size:13px;color:var(--text-muted);}
 </style>
@@ -142,22 +158,22 @@
   <div class="wrap">
     <span class="eyebrow">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-      Acceso a clientes
+      Acceso a la plataforma
     </span>
-    <h1>Ingresa tu código de acceso</h1>
-    <p class="lead">Es el código que te enviamos por correo al comprar tu herramienta UTP360.</p>
+    <h1>Ingresa a tu espacio UTP360</h1>
+    <p class="lead">Usa tu código personal de acceso. Verás las herramientas incluidas en tu contrato, ya sea como profesional independiente o como parte de tu establecimiento.</p>
 
     <div class="card">
       <form id="accessForm">
         <div class="field">
-          <label for="codigo">Código de acceso</label>
-          <input id="codigo" name="codigo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ej: planificador-nombreapellido" required>
+          <label for="codigo">Código personal de acceso</label>
+          <input id="codigo" name="codigo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ej: mmontessori-doc01" required>
         </div>
         <button type="submit" class="btn" id="submitBtn">
           <span id="btnLabel">Ingresar</span>
         </button>
       </form>
-      <p class="help-note">¿No tienes tu código o compraste una herramienta y aún no te llega? <a href="mailto:contacto@utp360.cl">Escríbenos a contacto@utp360.cl</a></p>
+      <p class="help-note">¿No tienes tu código, o tu establecimiento necesita más cupos de docentes? <a href="mailto:contacto@utp360.cl">Escríbenos a contacto@utp360.cl</a></p>
     </div>
 
     <div id="resultBox"></div>
@@ -209,7 +225,7 @@
     resultBox.innerHTML = `
       <div class="result-card" style="display:flex;align-items:center;gap:12px;">
         <div class="spinner" style="border-color:rgba(28,35,26,0.15);border-top-color:var(--olive);"></div>
-        <span style="font-weight:600;color:var(--text-muted);">Verificando tu código…</span>
+        <span style="font-weight:600;color:var(--text-muted);">Verificando tu acceso…</span>
       </div>`;
   }
 
@@ -221,11 +237,15 @@
       },
       vencido: {
         title: 'Tu acceso venció',
-        desc: 'El período de acceso a esta herramienta ya terminó. Escríbenos si quieres renovarlo.'
+        desc: 'El período contratado de tu cuenta ya terminó. Escríbenos si quieres renovarlo.'
       },
       suspendido: {
         title: 'Acceso suspendido',
         desc: 'Este acceso está suspendido temporalmente. Contáctanos para resolverlo.'
+      },
+      cuenta_no_encontrada: {
+        title: 'Cuenta no encontrada',
+        desc: 'Tu código existe, pero no está asociado a una cuenta activa. Escríbenos para regularizarlo.'
       },
       error: {
         title: 'No pudimos verificar tu código',
@@ -244,6 +264,12 @@
       </div>`;
   }
 
+  function enlaceHerramienta(base, codigo){
+    if (!base) return '#';
+    const sep = base.includes('?') ? '&' : '?';
+    return `${base}${sep}c=${encodeURIComponent(codigo || '')}`;
+  }
+
   function renderSuccess(data){
     const dias = data.diasRestantes;
     let badgeClass = 'ok', badgeText = `${dias} días restantes`;
@@ -251,18 +277,42 @@
     else if (dias <= 7){ badgeClass = 'warn'; }
     if (dias === 1) badgeText = '1 día restante';
 
+    const esInst = (data.tipo || '').toLowerCase().indexOf('inst') === 0;
+    const productos = data.productos || [];
+    const contratados = productos.filter(p => p.contratado);
+    const noContratados = productos.filter(p => !p.contratado);
+
+    const cupos = (esInst && (data.rol || '').toLowerCase() === 'administrador')
+      ? `<p class="seats">Cupos de usuarios en uso: <strong>${data.cuposUsados} de ${data.cupos}</strong></p>` : '';
+
+    const card = (p, activo) => `
+      <div class="tool ${activo ? '' : 'locked'}">
+        <span class="p-tag" style="background:${tagColor(p.producto)};">${escapeHtml(p.producto.toUpperCase())}</span>
+        <span class="tool-state">${activo ? 'Incluida en tu cuenta' : 'No contratada'}</span>
+        ${activo
+          ? `<a class="tool-open" href="${escapeHtml(enlaceHerramienta(p.enlace, data._codigo))}" target="_blank" rel="noopener">Abrir herramienta</a>`
+          : `<a class="tool-open" href="mailto:contacto@utp360.cl?subject=${encodeURIComponent('Quiero contratar ' + p.producto)}">Consultar</a>`}
+      </div>`;
+
     resultBox.className = 'show';
     resultBox.innerHTML = `
       <div class="result-card">
-        <span class="p-tag" style="background:${tagColor(data.producto)};">${escapeHtml((data.producto||'').toUpperCase())}</span>
-        <p class="result-greet">Hola, ${escapeHtml(data.nombre || '')}</p>
-        <p class="result-sub">Tu acceso a esta herramienta está activo.</p>
-        <span class="days-badge ${badgeClass}">${badgeText}</span>
+        <div class="acct-top">
+          <div>
+            <span class="acct-type">${esInst ? 'CUENTA INSTITUCIONAL' : 'CUENTA INDIVIDUAL'}</span>
+            <p class="result-greet">Hola, ${escapeHtml(data.nombre || '')}</p>
+            <p class="acct-name">${escapeHtml(data.cuenta || '')}${data.rol ? ' · ' + escapeHtml(data.rol) : ''}</p>
+          </div>
+          <span class="days-badge ${badgeClass}" style="margin-top:0;">${badgeText}</span>
+        </div>
         <div class="date-row">
-          <div><span>Inicio</span><strong>${escapeHtml(data.fechaInicio || '—')}</strong></div>
+          <div><span>Inicio del contrato</span><strong>${escapeHtml(data.fechaInicio || '—')}</strong></div>
           <div><span>Vence</span><strong>${escapeHtml(data.fechaFin || '—')}</strong></div>
         </div>
-        <a class="open-btn" href="${data.enlace || '#'}" target="_blank" rel="noopener">Abrir mi herramienta</a>
+        ${cupos}
+        <p class="tools-title">Tus herramientas</p>
+        <div class="tools-grid">${contratados.map(p => card(p, true)).join('') || '<p class="error-desc">Tu cuenta aún no tiene herramientas asignadas.</p>'}</div>
+        ${noContratados.length ? `<p class="tools-title">Otras herramientas UTP360</p><div class="tools-grid">${noContratados.map(p => card(p, false)).join('')}</div>` : ''}
       </div>`;
   }
 
@@ -325,6 +375,7 @@
     try {
       const data = await llamarAppsScript(codigo);
       if (data.valid){
+        data._codigo = codigo;
         renderSuccess(data);
       } else {
         renderError(data.motivo || 'no_encontrado');
