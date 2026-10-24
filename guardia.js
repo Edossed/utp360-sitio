@@ -35,6 +35,21 @@
 (function () {
   var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6NhYIB6ZWgR76ny3UMIMvYVAgAbCMb1tQX43V5TIg1Y_875PigS2tLav9yI4AseI/exec';
   var PRODUCTO = window.UTP360_PRODUCTO || '';
+  var ACCESO_URL = 'https://www.utp360.cl/acceso.html';
+
+  // Un mismo producto puede llamarse con su nombre interno o comercial.
+  var ALIAS = [
+    ['planificador', 'planificación', 'planificacion'],
+    ['aula check', 'acompañamiento al aula', 'acompañamiento', 'acompanamiento al aula', 'acompanamiento'],
+    ['evalúa', 'evalua', 'evaluación', 'evaluacion'],
+    ['integración', 'integracion'],
+    ['comprensión lectora', 'comprension lectora']
+  ];
+  function clave(n) {
+    var t = String(n || '').trim().toLowerCase();
+    for (var i = 0; i < ALIAS.length; i++) { if (ALIAS[i].indexOf(t) !== -1) return ALIAS[i][0]; }
+    return t;
+  }
 
   function llamarAppsScript(params) {
     return new Promise(function (resolve, reject) {
@@ -71,12 +86,12 @@
   function bloquear(titulo, desc) {
     document.documentElement.style.overflow = 'hidden';
     var overlay = document.createElement('div');
-    overlay.setAttribute('style', 'position:fixed;inset:0;z-index:999999;background:#F7F5EF;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif;');
+    overlay.setAttribute('style', 'position:fixed;inset:0;z-index:999999;background:#f4f6f9;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif;');
     overlay.innerHTML =
       '<div style="max-width:420px;text-align:center;background:#fff;border-radius:16px;padding:32px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.2);">' +
-        '<p style="font-weight:800;font-size:18px;margin:0 0 8px;color:#a83f26;">' + titulo + '</p>' +
-        '<p style="color:#5B6357;font-size:15px;margin:0 0 20px;">' + desc + '</p>' +
-        '<a href="/acceso.html" style="display:inline-block;background:#1C231C;color:#F7F5EF;padding:12px 22px;border-radius:100px;font-weight:700;text-decoration:none;font-size:14.5px;">Ir a acceso de clientes</a>' +
+        '<p style="font-weight:800;font-size:18px;margin:0 0 8px;color:#1f3a5f;">' + titulo + '</p>' +
+        '<p style="color:#56627a;font-size:15px;margin:0 0 20px;">' + desc + '</p>' +
+        '<a href="' + ACCESO_URL + '" style="display:inline-block;background:#1f3a5f;color:#ffffff;padding:12px 22px;border-radius:100px;font-weight:700;text-decoration:none;font-size:14.5px;">Ir a la plataforma UTP360</a>' +
       '</div>';
     document.body.appendChild(overlay);
   }
@@ -84,7 +99,7 @@
   function mostrarCargando() {
     var overlay = document.createElement('div');
     overlay.id = 'utp360-loading-overlay';
-    overlay.setAttribute('style', 'position:fixed;inset:0;z-index:999999;background:#F7F5EF;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#5B6357;font-weight:600;');
+    overlay.setAttribute('style', 'position:fixed;inset:0;z-index:999999;background:#f4f6f9;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#56627a;font-weight:600;');
     overlay.textContent = 'Verificando tu acceso…';
     document.body.appendChild(overlay);
   }
@@ -95,6 +110,17 @@
 
   var params = new URLSearchParams(window.location.search);
   var codigo = (params.get('c') || '').trim();
+  try {
+    if (codigo) {
+      sessionStorage.setItem('utp360_codigo', codigo);
+      // Quita el código de la dirección visible para que no quede en capturas ni se comparta por error.
+      params.delete('c');
+      var resto = params.toString();
+      history.replaceState(null, '', window.location.pathname + (resto ? '?' + resto : '') + window.location.hash);
+    } else {
+      codigo = sessionStorage.getItem('utp360_codigo') || '';
+    }
+  } catch (e) {}
 
   window.UTP360 = {
     codigo: codigo,
@@ -114,7 +140,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     if (!codigo) {
-      bloquear('Acceso restringido', 'Esta herramienta es solo para clientes. Ingresa tu código de acceso para continuar.');
+      bloquear('Acceso restringido', 'Entra primero a la plataforma UTP360 con tu correo y tu clave, y abre la herramienta desde tu panel.');
       return;
     }
     mostrarCargando();
@@ -130,12 +156,12 @@
           bloquear('No pudimos validar tu acceso', mensajes[resp.motivo] || 'Ocurrió un problema al verificar tu código.');
           return;
         }
-        var prodEsperado = String(PRODUCTO || '').trim().toLowerCase();
+        var prodEsperado = clave(PRODUCTO);
         var tiene = (resp.productos || []).some(function (p) {
-          return p.contratado && String(p.producto || '').trim().toLowerCase() === prodEsperado;
+          return p.contratado && clave(p.producto) === prodEsperado;
         });
         if (!tiene) {
-          bloquear('Herramienta no contratada', 'Tu cuenta no incluye esta herramienta UTP360. Escríbenos a contacto@utp360.cl para agregarla.');
+          bloquear('Sin acceso a esta herramienta', 'Tu usuario no tiene habilitada esta herramienta. Si crees que es un error, escribe a contacto@utp360.cl.');
           return;
         }
         window.UTP360.cuenta = resp.cuenta;
