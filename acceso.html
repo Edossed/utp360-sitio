@@ -4,36 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Acceso a la plataforma — UTP360</title>
-<meta name="description" content="Ingresa con tu código personal para entrar a tu espacio en la plataforma UTP360.">
+<meta name="description" content="Ingresa con tu correo y tu clave para entrar a tu espacio en la plataforma UTP360.">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#1C231C;
-    --olive:#6E7C3D;
-    --olive-dark:#57642F;
+    --ink:#1f3a5f;
+    --olive:#2b4d7a;
+    --olive-dark:#2b4d7a;
     --sun:#F2B93B;
-    --coral:#E86A50;
+    --coral:#d03b3b;
     --sky:#3F63C9;
     --lila:#7C5A9E;
-    --paper:#F7F5EF;
-    --paper-2:#EFEDE2;
-    --text:#1C231C;
-    --text-muted:#5B6357;
+    --paper:#f4f6f9;
+    --paper-2:#e8eef6;
+    --text:#18212b;
+    --text-muted:#4d5a68;
     --card-bg:#FFFFFF;
-    --border: rgba(28,35,26,0.13);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --ink:#F2F1EA; --paper:#14170F; --paper-2:#1B1F15; --text:#F2F1EA;
-      --text-muted:#AAB2A0; --card-bg:#1E2318; --border: rgba(242,241,234,0.12);
-    }
-  }
-  :root[data-theme="dark"]{
-    --ink:#F2F1EA; --paper:#14170F; --paper-2:#1B1F15; --text:#F2F1EA;
-    --text-muted:#AAB2A0; --card-bg:#1E2318; --border: rgba(242,241,234,0.12);
+    --border:#dde3ea;
   }
   *{box-sizing:border-box;}
   body{
@@ -139,53 +129,123 @@
   .tool.locked{opacity:.62;border-style:dashed;}
   .tool.locked .tool-open{background:transparent;color:var(--text-muted);border:1px solid var(--border);}
 
+
+  /* ---------- Puerta de entrada ---------- */
+  .puerta{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#1f3a5f 0%,#2b4d7a 60%,#3f6aa3 100%);}
+  .puerta[hidden]{display:none;}
+  .puerta-card{width:100%;max-width:400px;background:#fff;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.25);padding:32px;}
+  .sello{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
+  .sello img{height:44px;max-width:150px;object-fit:contain;}
+  .sello b{display:block;font-size:16px;color:var(--text);}
+  .sello span{font-size:12.5px;color:var(--text-muted);line-height:1.35;display:block;}
+  .puerta-card h1{font-size:25px;color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-weight:800;}
+  .puerta-card .sub{color:var(--text-muted);font-size:15px;margin-top:6px;}
+  .puerta-card .field{margin-top:18px;}
+  .puerta-card .field input{border-radius:8px;background:#fff;}
+  .puerta-card .btn{border-radius:8px;background:var(--ink);}
+  .puerta-card .btn:hover{background:var(--olive-dark);}
+  .pw-wrap{position:relative;}
+  .pw-wrap input{padding-right:84px;}
+  .pw-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--olive-dark);font-weight:700;font-size:13px;cursor:pointer;padding:8px 10px;font-family:inherit;}
+  .form-msg{display:none;margin-top:16px;padding:11px 14px;border-radius:10px;font-size:14px;font-weight:600;}
+  .form-msg.show{display:block;}
+  .form-msg.err{background:color-mix(in srgb, var(--coral) 16%, transparent);color:#a83f26;}
+  .form-msg.info{background:color-mix(in srgb, var(--olive) 16%, transparent);color:var(--olive-dark);}
+  .link-sec{display:block;text-align:center;margin-top:16px;font-size:14px;font-weight:600;color:var(--olive-dark);cursor:pointer;background:none;border:0;width:100%;font-family:inherit;}
+  .link-sec:hover{text-decoration:underline;}
+  .btn-sec{background:transparent;color:var(--text);border-color:var(--border);margin-top:14px;}
+  .btn-sec:hover{background:var(--paper-2);}
+  .puerta-back{display:block;text-align:center;margin-top:22px;font-size:13.5px;color:var(--text-muted);}
+  .puerta-back:hover{color:var(--text);}
+  #panelVista[hidden]{display:none;}
+  .logout{background:none;border:1px solid var(--border);border-radius:100px;padding:8px 16px;font-weight:700;font-size:13.5px;color:var(--text);cursor:pointer;font-family:inherit;}
+  .logout:hover{border-color:var(--ink);}
+  @media (max-width:480px){ .puerta{padding:12px;align-items:flex-start;padding-top:28px;} .puerta-card{padding:24px 20px;} }
   footer{padding:36px 0;border-top:1px solid var(--border);text-align:center;}
   .foot-copy{font-size:13px;color:var(--text-muted);}
 </style>
 </head>
 <body>
 
+
+<!-- ============ PUERTA DE ENTRADA ============ -->
+<div class="puerta" id="puertaVista">
+  <div class="puerta-card">
+    <div class="sello">
+      <a href="index.html"><img src="logo.png" alt="UTP360"></a>
+      <div><b>Plataforma UTP360</b><span>Tus herramientas de gestión pedagógica</span></div>
+    </div>
+
+    <!-- Paso 1: correo y clave -->
+    <form id="loginForm" novalidate>
+      <h1>Ingreso a la plataforma</h1>
+      <p class="sub">Ingresa tu correo y la clave asignada.</p>
+      <div class="field">
+        <label for="correo">Correo electrónico</label>
+        <input id="correo" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="nombre@colegio.cl" required>
+      </div>
+      <div class="field">
+        <label for="clave">Clave</label>
+        <div class="pw-wrap">
+          <input id="clave" type="password" autocomplete="current-password" required>
+          <button type="button" class="pw-toggle" data-for="clave">Mostrar</button>
+        </div>
+      </div>
+      <div class="form-msg" id="loginMsg" role="alert"></div>
+      <button type="submit" class="btn" id="loginBtn"><span>Ingresar</span></button>
+      <a class="link-sec" id="olvido" href="mailto:contacto@utp360.cl?subject=Restablecer%20mi%20clave%20UTP360">¿Olvidaste tu clave?</a>
+      <a class="puerta-back" href="index.html">← Volver al inicio</a>
+    </form>
+
+    <!-- Paso 2: crear clave personal (primer ingreso) -->
+    <form id="crearForm" novalidate hidden>
+      <h1>Crea tu clave</h1>
+      <p class="sub">Es tu primer ingreso. Elige una clave personal que solo tú conozcas.</p>
+      <div class="field">
+        <label for="nueva">Nueva clave (mínimo 8 caracteres, con letras y números)</label>
+        <div class="pw-wrap">
+          <input id="nueva" type="password" autocomplete="new-password" required>
+          <button type="button" class="pw-toggle" data-for="nueva">Mostrar</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="nueva2">Repite la nueva clave</label>
+        <input id="nueva2" type="password" autocomplete="new-password" required>
+      </div>
+      <div class="form-msg" id="crearMsg" role="alert"></div>
+      <button type="submit" class="btn" id="crearBtn"><span>Guardar e ingresar</span></button>
+      <button type="button" class="link-sec" id="crearCancelar">Cancelar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ PANEL (después de ingresar) ============ -->
+<div id="panelVista" hidden>
 <header>
   <div class="header-row">
     <a href="index.html" class="logo-badge">
       <img class="logo-img" src="logo.png" alt="UTP360">
     </a>
-    <a href="index.html" class="back-link">← Volver al inicio</a>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <a href="index.html" class="back-link">← Inicio</a>
+      <button type="button" class="logout" id="logoutBtn">Cerrar sesión</button>
+    </div>
   </div>
 </header>
 
 <main>
   <div class="wrap">
-    <span class="eyebrow">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-      Acceso a la plataforma
-    </span>
-    <h1>Ingresa a tu espacio UTP360</h1>
-    <p class="lead">Usa tu código personal de acceso. Verás las herramientas incluidas en tu contrato, ya sea como profesional independiente o como parte de tu establecimiento.</p>
-
-    <div class="card">
-      <form id="accessForm">
-        <div class="field">
-          <label for="codigo">Código personal de acceso</label>
-          <input id="codigo" name="codigo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ej: mmontessori-doc01" required>
-        </div>
-        <button type="submit" class="btn" id="submitBtn">
-          <span id="btnLabel">Ingresar</span>
-        </button>
-      </form>
-      <p class="help-note">¿No tienes tu código, o tu establecimiento necesita más cupos de docentes? <a href="mailto:contacto@utp360.cl">Escríbenos a contacto@utp360.cl</a></p>
-    </div>
-
     <div id="resultBox"></div>
   </div>
 </main>
 
 <footer>
-  <p class="foot-copy">© <span id="year"></span> UTP360 — Soluciones para la gestión pedagógica.</p>
+  <p class="foot-copy">© <span class="year"></span> UTP360 — Soluciones para la gestión pedagógica.</p>
 </footer>
+</div>
 
 <script>
-  document.getElementById('year').textContent = new Date().getFullYear();
+  document.querySelectorAll('.year').forEach(function(e){ e.textContent = new Date().getFullYear(); });
 
   /* ======================================================================
      Reemplaza esta URL por la de tu Web App de Google Apps Script,
@@ -194,10 +254,6 @@
   ====================================================================== */
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6NhYIB6ZWgR76ny3UMIMvYVAgAbCMb1tQX43V5TIg1Y_875PigS2tLav9yI4AseI/exec';
 
-  const form = document.getElementById('accessForm');
-  const input = document.getElementById('codigo');
-  const submitBtn = document.getElementById('submitBtn');
-  const btnLabel = document.getElementById('btnLabel');
   const resultBox = document.getElementById('resultBox');
 
   const PRODUCT_COLORS = {
@@ -264,8 +320,10 @@
       </div>`;
   }
 
-  function enlaceHerramienta(base, codigo){
+  function enlaceHerramienta(p, codigo){
+    const base = p.enlace;
     if (!base) return '#';
+    if (p.propio) return base; // herramienta con ingreso propio (ej. Evalúa)
     const sep = base.includes('?') ? '&' : '?';
     return `${base}${sep}c=${encodeURIComponent(codigo || '')}`;
   }
@@ -289,8 +347,10 @@
       <div class="tool ${activo ? '' : 'locked'}">
         <span class="p-tag" style="background:${tagColor(p.producto)};">${escapeHtml(p.producto.toUpperCase())}</span>
         <span class="tool-state">${activo ? 'Incluida en tu cuenta' : 'No contratada'}</span>
-        ${activo
-          ? `<a class="tool-open" href="${escapeHtml(enlaceHerramienta(p.enlace, data._codigo))}" target="_blank" rel="noopener">Abrir herramienta</a>`
+        ${activo && p.propio
+          ? `<button type="button" class="tool-open" data-sso="${escapeHtml(p.producto)}" data-enlace="${escapeHtml(p.enlace)}" style="border:none;cursor:pointer;font-family:inherit;">Abrir herramienta</button>`
+          : activo
+          ? `<a class="tool-open" href="${escapeHtml(enlaceHerramienta(p, data._codigo))}" target="_blank" rel="noopener">Abrir herramienta</a>`
           : `<a class="tool-open" href="mailto:contacto@utp360.cl?subject=${encodeURIComponent('Quiero contratar ' + p.producto)}">Consultar</a>`}
       </div>`;
 
@@ -314,12 +374,34 @@
         <div class="tools-grid">${contratados.map(p => card(p, true)).join('') || '<p class="error-desc">Tu cuenta aún no tiene herramientas asignadas.</p>'}</div>
         ${noContratados.length ? `<p class="tools-title">Otras herramientas UTP360</p><div class="tools-grid">${noContratados.map(p => card(p, false)).join('')}</div>` : ''}
       </div>`;
+    resultBox.querySelectorAll('[data-sso]').forEach(btn => {
+      btn.addEventListener('click', () => abrirConIngresoUnico(btn, data._codigo));
+    });
+  }
+
+  // Herramientas con ingreso propio (Evalúa): pide un pase firmado y entra sin pedir clave.
+  // Si el pase no está disponible, abre la herramienta normalmente (ingreso manual).
+  async function abrirConIngresoUnico(btn, codigo){
+    const producto = btn.dataset.sso;
+    const enlace = btn.dataset.enlace;
+    const ventana = window.open('', '_blank'); // se abre de inmediato para evitar el bloqueo de ventanas emergentes
+    const textoOriginal = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Abriendo…';
+    try {
+      const r = await llamarAppsScript(codigo, { accion: 'sso', producto: producto });
+      const destino = (r && r.valid && r.token) ? enlace + '#sso=' + encodeURIComponent(r.token) : enlace;
+      if (ventana) ventana.location.href = destino; else window.location.href = destino;
+    } catch (err) {
+      if (ventana) ventana.location.href = enlace; else window.location.href = enlace;
+    } finally {
+      btn.disabled = false; btn.textContent = textoOriginal;
+    }
   }
 
   // Llama al Apps Script vía JSONP (una etiqueta <script>), no vía fetch().
   // Esto evita los bloqueos de tipo CORS que algunos navegadores aplican
   // a las peticiones fetch hechas hacia script.google.com desde otro dominio.
-  function llamarAppsScript(codigo){
+  function llamarAppsScript(codigo, extra){
     return new Promise((resolve, reject) => {
       const callbackName = 'utp360cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
       const script = document.createElement('script');
@@ -354,53 +436,117 @@
 
       const url = APPS_SCRIPT_URL
         + '?codigo=' + encodeURIComponent(codigo)
+        + Object.keys(extra || {}).map(k => '&' + k + '=' + encodeURIComponent(extra[k])).join('')
         + '&callback=' + encodeURIComponent(callbackName);
       script.src = url;
       document.body.appendChild(script);
     });
   }
 
-  async function verificarCodigo(codigo){
-    if (APPS_SCRIPT_URL === 'PEGA_AQUI_TU_URL_DE_GOOGLE_APPS_SCRIPT'){
-      resultBox.className = 'show';
-      resultBox.innerHTML = `
-        <div class="result-card error">
-          <p class="error-title">Acceso aún no configurado</p>
-          <p class="error-desc">Falta conectar esta página con la planilla de clientes. (Nota para UTP360: pega la URL de tu Web App de Apps Script en la constante APPS_SCRIPT_URL dentro de acceso.html.)</p>
-        </div>`;
-      return;
-    }
-    renderLoading();
-    submitBtn.disabled = true;
-    try {
-      const data = await llamarAppsScript(codigo);
-      if (data.valid){
-        data._codigo = codigo;
-        renderSuccess(data);
-      } else {
-        renderError(data.motivo || 'no_encontrado');
-      }
-    } catch (err) {
-      renderError('error');
-    } finally {
-      submitBtn.disabled = false;
-    }
+  /* ---------- Puerta de entrada ---------- */
+  const $ = id => document.getElementById(id);
+  const vistas = { login: $('loginForm'), crear: $('crearForm') };
+  const KEY_SESION = 'utp360_codigo';
+  let credencialesPendientes = null;
+
+  function mostrarVista(nombre){
+    Object.keys(vistas).forEach(k => { vistas[k].hidden = (k !== nombre); });
+    ['loginMsg','crearMsg'].forEach(id => { $(id).className = 'form-msg'; $(id).textContent = ''; });
+  }
+  function mensaje(id, texto, tipo){ const el = $(id); el.textContent = texto; el.className = 'form-msg show ' + (tipo || 'err'); }
+  function ocupado(btnId, on, texto){
+    const b = $(btnId); b.disabled = on;
+    b.querySelector('span').textContent = on ? 'Verificando…' : texto;
+  }
+  function entrarAlPanel(data, codigo){
+    try { sessionStorage.setItem(KEY_SESION, codigo); } catch (e) {}
+    data._codigo = codigo;
+    $('puertaVista').hidden = true; $('panelVista').hidden = false;
+    window.scrollTo(0, 0);
+    renderSuccess(data);
+  }
+  function salirDelPanel(){
+    try { sessionStorage.removeItem(KEY_SESION); } catch (e) {}
+    $('panelVista').hidden = true; $('puertaVista').hidden = false;
+    $('clave').value = ''; resultBox.innerHTML = ''; resultBox.className = '';
+    credencialesPendientes = null; mostrarVista('login');
+    if (window.history.replaceState) window.history.replaceState(null, '', window.location.pathname);
   }
 
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    const codigo = input.value.trim();
-    if (!codigo) return;
-    verificarCodigo(codigo);
+  document.querySelectorAll('.pw-toggle').forEach(b => {
+    b.addEventListener('click', () => {
+      const inp = $(b.dataset.for); const ver = inp.type === 'password';
+      inp.type = ver ? 'text' : 'password'; b.textContent = ver ? 'Ocultar' : 'Mostrar';
+    });
   });
 
-  // Soporta enlaces personalizados: acceso.html?c=codigo-del-cliente
-  const params = new URLSearchParams(window.location.search);
-  const codigoParam = params.get('c');
-  if (codigoParam){
-    input.value = codigoParam;
-    verificarCodigo(codigoParam);
+  const MOTIVOS = {
+    credenciales: 'Correo o clave incorrectos. Revisa los datos e inténtalo de nuevo.',
+    bloqueado: 'Demasiados intentos fallidos. Espera 15 minutos o escríbenos a contacto@utp360.cl.',
+    vencido: 'El período contratado de tu cuenta terminó. Escríbenos para renovarlo.',
+    suspendido: 'Tu acceso está suspendido. Contáctanos para resolverlo.',
+    cuenta_no_encontrada: 'Tu usuario no está asociado a una cuenta activa. Escríbenos para regularizarlo.',
+    error: 'No pudimos conectar con el servidor. Revisa tu conexión e inténtalo en unos segundos.'
+  };
+
+  async function postLogin(cuerpo){
+    const r = await fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(cuerpo) });
+    return r.json();
   }
+
+  $('loginForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const correo = $('correo').value.trim(), clave = $('clave').value;
+    if (!correo || !clave) return mensaje('loginMsg', 'Escribe tu correo y tu clave.');
+    ocupado('loginBtn', true);
+    try {
+      const data = await postLogin({ accion: 'login', correo: correo, clave: clave });
+      if (data.valid) { try { localStorage.setItem('utp360_correo', correo); } catch (e2) {} return entrarAlPanel(data, data.codigo); }
+      if (data.motivo === 'crear_clave') {
+        credencialesPendientes = { correo: correo, clave: clave };
+        mostrarVista('crear'); return $('nueva').focus();
+      }
+      mensaje('loginMsg', MOTIVOS[data.motivo] || MOTIVOS.error);
+    } catch (err) { mensaje('loginMsg', MOTIVOS.error); }
+    finally { ocupado('loginBtn', false, 'Ingresar'); }
+  });
+
+  $('crearForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const n1 = $('nueva').value, n2 = $('nueva2').value;
+    if (n1 !== n2) return mensaje('crearMsg', 'Las dos claves no coinciden.');
+    ocupado('crearBtn', true);
+    try {
+      const data = await postLogin({ accion: 'login', correo: credencialesPendientes.correo, clave: credencialesPendientes.clave, nuevaClave: n1 });
+      if (data.valid) { $('nueva').value = ''; $('nueva2').value = ''; credencialesPendientes = null; return entrarAlPanel(data, data.codigo); }
+      mensaje('crearMsg', data.motivo === 'clave_debil' ? data.detalle : (MOTIVOS[data.motivo] || MOTIVOS.error));
+    } catch (err) { mensaje('crearMsg', MOTIVOS.error); }
+    finally { ocupado('crearBtn', false, 'Guardar e ingresar'); }
+  });
+  $('crearCancelar').addEventListener('click', () => { credencialesPendientes = null; $('clave').value = ''; mostrarVista('login'); });
+
+  $('logoutBtn').addEventListener('click', salirDelPanel);
+
+  // Ingreso por código (compatibilidad con enlaces ?c= y sesión abierta)
+  async function verificarCodigo(codigo, desdeFormulario){
+    try {
+      const data = await llamarAppsScript(codigo);
+      if (data.valid) { entrarAlPanel(data, codigo); return true; }
+      const msg = { no_encontrado: 'Código no válido. Revisa que esté bien escrito.', vencido: MOTIVOS.vencido, suspendido: MOTIVOS.suspendido, cuenta_no_encontrada: MOTIVOS.cuenta_no_encontrada }[data.motivo] || MOTIVOS.error;
+      try { sessionStorage.removeItem(KEY_SESION); } catch (e) {}
+    } catch (err) {
+    }
+    return false;
+  }
+
+  try { const c = localStorage.getItem('utp360_correo'); if (c) $('correo').value = c; } catch (e) {}
+  (async function iniciar(){
+    const params = new URLSearchParams(window.location.search);
+    let codigo = params.get('c');
+    if (!codigo) { try { codigo = sessionStorage.getItem(KEY_SESION); } catch (e) {} }
+    if (codigo) { resultBox.className = 'show'; await verificarCodigo(codigo, false); }
+    else if ($('correo').value) $('clave').focus();
+  })();
 </script>
 
 </body>
