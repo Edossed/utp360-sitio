@@ -208,11 +208,11 @@ table.ord th:not(.nosort){cursor:pointer;user-select:none}
     <div class="sello"><img id="logo-utp360" src="https://www.utp360.cl/logo.png" alt="UTP360" style="height:42px;max-width:150px;object-fit:contain" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo',textContent:'360'}))"><div><b>UTP360 · Evalúa</b><br><span id="sello-colegio" style="color:var(--text-2);font-size:12px">Evaluaciones y resultados de aprendizaje</span></div></div>
     <div id="form-login">
       <h1>Ingreso docente</h1>
-      <p>Ingrese el código de su establecimiento y el usuario y clave asignados por UTP.</p>
+      <p>Ingrese su correo institucional y la clave asignada.</p>
       <div id="login-error" class="msg-error hidden"></div>
-      <div class="campo" id="campo-codigo"><label for="l-codigo">Código de acceso del establecimiento</label><input id="l-codigo" autocomplete="organization" autocapitalize="off" spellcheck="false"></div>
-      <div class="campo"><label for="l-usuario">Usuario</label><input id="l-usuario" autocomplete="username"></div>
+      <div class="campo"><label for="l-usuario">Correo electrónico</label><input id="l-usuario" type="text" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="nombre@colegio.cl"></div>
       <div class="campo"><label for="l-clave">Clave</label><input id="l-clave" type="password" autocomplete="current-password"></div>
+      <div class="campo hidden" id="campo-codigo"><label for="l-codigo">Código de acceso del establecimiento</label><input id="l-codigo" autocomplete="organization" autocapitalize="off" spellcheck="false"><small style="color:var(--muted)">Su correo no está asociado a un establecimiento: escriba el código que le entregó UTP.</small></div>
       <button class="btn prim" id="btn-login">Ingresar</button>
     </div>
     <div id="form-cambio" class="hidden">
@@ -282,6 +282,19 @@ async function resolverColegio(codigo) {
   if (!url) throw new Error('El código de acceso no es válido. Verifíquelo o escriba a contacto@utp360.cl.');
   try { localStorage.setItem('pe_codigo', c); } catch (e) {}
   return url;
+}
+/* El establecimiento se identifica por el dominio del correo (colegios.json → "dominios").
+   Si el dominio no está registrado (por ejemplo, un correo personal), se pide el código del establecimiento. */
+async function resolverPorCorreo(correo, codigo) {
+  const c = String(correo || '').trim().toLowerCase(), i = c.lastIndexOf('@');
+  if (i < 1) { if (codigo) return resolverColegio(codigo); throw new Error('NECESITA_CODIGO'); }   // nombre de usuario sin correo: requiere código
+  let dir;
+  try { const r = await fetch('colegios.json?v=' + Date.now(), { cache: 'no-store' }); dir = await r.json(); }
+  catch (e) { throw new Error('No fue posible leer el directorio de establecimientos. Intente nuevamente.'); }
+  const url = dir && dir.dominios && dir.dominios[await sha256(c.slice(i + 1))];
+  if (url) { try { localStorage.setItem('pe_correo', c); } catch (e) {} return url; }
+  if (codigo) return resolverColegio(codigo);
+  const err = new Error('NECESITA_CODIGO'); throw err;
 }
 function transporte(accion, datos) {
   if (!MODO_PORTAL) {
@@ -368,13 +381,11 @@ function confirmar(titulo, texto, etiqueta) {
  * ===================================================================== */
 function mostrarAcceso() {
   $('app').classList.add('hidden'); $('acceso').classList.remove('hidden'); $('form-login').classList.remove('hidden'); $('form-cambio').classList.add('hidden');
-  $('campo-codigo').classList.toggle('hidden', !MODO_PORTAL);
-  if (MODO_PORTAL && !$('l-codigo').value) {
-    let c = new URLSearchParams(location.search).get('c') || '';
-    if (!c) { try { c = localStorage.getItem('pe_codigo') || ''; } catch (e) {} }
-    $('l-codigo').value = c;
-  }
-  setTimeout(function () { (MODO_PORTAL && !$('l-codigo').value ? $('l-codigo') : $('l-usuario')).focus(); }, 50);
+  $('campo-codigo').classList.add('hidden');
+  const cq = new URLSearchParams(location.search).get('c') || '';
+  if (cq) { $('l-codigo').value = cq; $('campo-codigo').classList.remove('hidden'); }
+  if (MODO_PORTAL && !$('l-usuario').value) { try { $('l-usuario').value = localStorage.getItem('pe_correo') || ''; } catch (e) {} }
+  setTimeout(function () { ($('l-usuario').value ? $('l-clave') : $('l-usuario')).focus(); }, 50);
 }
 function mostrarCambio() { $('app').classList.add('hidden'); $('acceso').classList.remove('hidden'); $('form-login').classList.add('hidden'); $('form-cambio').classList.remove('hidden'); }
 function salirLocal(msg) { limpiarMemoria(); S.token = null; S.user = null; guardarSesion(null); mostrarAcceso(); if (msg) { $('login-error').textContent = msg; $('login-error').classList.remove('hidden'); } }
@@ -382,7 +393,15 @@ function salirLocal(msg) { limpiarMemoria(); S.token = null; S.user = null; guar
 $('btn-login').onclick = async function () {
   $('login-error').classList.add('hidden');
   try {
-    if (MODO_PORTAL) { cargando(true); try { S.apiUrl = await resolverColegio($('l-codigo').value); } finally { cargando(false); } }
+    if (MODO_PORTAL) {
+      cargando(true);
+      try { S.apiUrl = await resolverPorCorreo($('l-usuario').value, normCodigo($('l-codigo').value)); }
+      catch (er) {
+        if (er.message === 'NECESITA_CODIGO') { $('campo-codigo').classList.remove('hidden'); $('l-codigo').focus(); throw new Error('No reconocemos el dominio de su correo. Escriba el código de acceso del establecimiento.'); }
+        throw er;
+      }
+      finally { cargando(false); }
+    }
     const r = await api('login', { usuario: $('l-usuario').value, clave: $('l-clave').value });
     S.token = r.token; S.user = r.usuario; guardarSesion(r.token);
     $('l-clave').value = '';
@@ -393,7 +412,7 @@ $('btn-login').onclick = async function () {
 };
 $('l-clave').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btn-login').click(); });
 $('l-usuario').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('l-clave').focus(); });
-$('l-codigo').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('l-usuario').focus(); });
+$('l-codigo').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btn-login').click(); });
 
 $('btn-cambio').onclick = async function () {
   $('cambio-error').classList.add('hidden');
@@ -1822,12 +1841,22 @@ function vistaRegistro() {
   $('acceso').classList.remove('hidden');
   document.querySelector('.tarjeta-acceso').innerHTML = '<h1>Registrar establecimiento</h1><p>Genere la línea que se agrega a <b>colegios.json</b>. El código queda cifrado: el archivo no revela qué colegios son clientes.</p>' +
     '<div class="campo"><label>Código de acceso del colegio (ej.: montessori)</label><input id="g-codigo" style="width:100%"></div>' +
+    '<div class="campo"><label>Dominio(s) de correo del colegio (ej.: colegio.cl; separe con comas)</label><input id="g-dom" style="width:100%" placeholder="colegio.cl"></div>' +
     '<div class="campo"><label>URL de la aplicación web del colegio (termina en /exec)</label><input id="g-url" style="width:100%" placeholder="https://script.google.com/macros/s/…/exec"></div>' +
     '<button class="btn prim" id="g-ok" style="width:100%;justify-content:center">Generar línea</button><pre id="g-res" style="white-space:pre-wrap;word-break:break-all;background:#f3f6fa;border-radius:8px;padding:10px;font-size:12px;margin-top:14px"></pre>';
   $('g-ok').onclick = async function () {
     const c = normCodigo($('g-codigo').value), u = $('g-url').value.trim();
     if (!c || !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(u)) { $('g-res').textContent = 'Revise el código y la URL (debe terminar en /exec).'; return; }
-    $('g-res').textContent = 'Código normalizado: ' + c + '\n\nAgregue esta línea dentro de "colegios": { … } en colegios.json:\n\n"' + await sha256(c) + '": "' + u + '"';
+    const libres = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'yahoo.es', 'live.com', 'icloud.com', 'hotmail.es', 'outlook.es'];
+    const doms = $('g-dom').value.split(/[,;\s]+/).map(function (x) { return x.trim().toLowerCase().replace(/^@/, ''); }).filter(Boolean);
+    const malos = doms.filter(function (x) { return libres.indexOf(x) >= 0 || x.indexOf('.') < 1; });
+    if (malos.length) { $('g-res').textContent = 'No use dominios de correo personal ni inválidos: ' + malos.join(', ') + '. Esos usuarios ingresan con el código del establecimiento.'; return; }
+    let t = 'Código normalizado: ' + c + '\n\nAgregue esta línea dentro de "colegios": { … } en colegios.json:\n\n"' + await sha256(c) + '": "' + u + '"';
+    if (doms.length) {
+      t += '\n\nAgregue estas líneas dentro de "dominios": { … } en colegios.json:\n\n';
+      for (const d of doms) t += '"' + await sha256(d) + '": "' + u + '",   // ' + d + '\n';
+    }
+    $('g-res').textContent = t;
   };
 }
 
