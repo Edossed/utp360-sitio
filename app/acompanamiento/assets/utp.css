@@ -1,0 +1,62 @@
+main#panel { max-width: 1280px; }
+.filters { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+.filters label.f { min-width: 150px; }
+.filters .spacer { flex: 1; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 16px; overflow-x: auto; }
+.tabs button { font: inherit; font-size: .9rem; font-weight: 600; background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 12px; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+.tile .lbl { font-size: .78rem; color: var(--ink-2); font-weight: 600; }
+.tile .val { font-size: 1.9rem; font-weight: 650; margin: 2px 0; }
+.tile .det { font-size: .8rem; color: var(--muted); }
+.tile .st { font-size: .8rem; font-weight: 600; }
+.tile .st.ok { color: var(--ok); }
+.tile .st.warn { color: var(--warn); }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+
+/* Barras horizontales (escala 1–4) */
+.hbar { display: grid; grid-template-columns: minmax(140px, 34%) 1fr 48px; align-items: center; gap: 10px; padding: 6px 0; }
+.hbar .name { font-size: .86rem; color: var(--ink); }
+.hbar .track { position: relative; height: 18px; }
+.hbar .fill { position: absolute; left: 0; top: 3px; height: 12px; background: var(--accent); border-radius: 0 4px 4px 0; }
+.hbar .ref { position: absolute; top: -2px; bottom: -2px; width: 0; border-left: 1px dashed var(--muted); }
+.hbar .v { font-size: .86rem; font-variant-numeric: tabular-nums; text-align: right; color: var(--ink-2); font-weight: 600; }
+.axis { display: grid; grid-template-columns: minmax(140px, 34%) 1fr 48px; gap: 10px; font-size: .72rem; color: var(--muted); }
+.axis .ticks { position: relative; height: 14px; }
+.axis .ticks span { position: absolute; transform: translateX(-50%); }
+
+/* Barras apiladas 100% */
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: .8rem; color: var(--ink-2); margin-bottom: 8px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+.stk { display: grid; grid-template-columns: minmax(180px, 34%) 1fr 56px; align-items: center; gap: 10px; padding: 4px 0; }
+.stk .name { font-size: .84rem; }
+.stk .name .code { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 4px; }
+.stk .bar { display: flex; gap: 2px; height: 16px; }
+.stk .bar span { height: 100%; min-width: 2px; }
+.stk .bar span:first-child { border-radius: 4px 0 0 4px; }
+.stk .bar span:last-child { border-radius: 0 4px 4px 0; }
+.stk .v { text-align: right; font-size: .84rem; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink-2); }
+.b1 { background: var(--l1); } .b2 { background: var(--l2); } .b3 { background: var(--l3); } .b4 { background: var(--l4); } .b0 { background: var(--l0); }
+
+/* Mapa de calor */
+.heat-wrap { overflow: auto; max-height: 70vh; border: 1px solid var(--line); border-radius: 8px; }
+table.heat { border-collapse: separate; border-spacing: 2px; font-size: .78rem; }
+table.heat th { position: sticky; top: 0; background: var(--surface); z-index: 2; font-weight: 600; color: var(--ink-2); padding: 4px; font-variant-numeric: tabular-nums; }
+table.heat th.dimh { font-size: .7rem; color: var(--muted); }
+table.heat td.nm, table.heat th.nm { position: sticky; left: 0; background: var(--surface); z-index: 1; text-align: left; white-space: nowrap; padding-right: 10px; }
+table.heat th.nm { z-index: 3; }
+table.heat td.nm button { font: inherit; background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; text-align: left; }
+table.heat td.c { text-align: center; }
+table.heat td.sep, table.heat th.sep { width: 6px; padding: 0; }
+.lv.sm { min-width: 26px; height: 22px; font-size: .74rem; }
+
+.tip { position: fixed; z-index: 80; pointer-events: none; background: var(--ink); color: var(--bg); font-size: .8rem; padding: 6px 9px; border-radius: 6px; max-width: 320px; box-shadow: var(--shadow); line-height: 1.35; }
+
+ul.rank { list-style: none; padding: 0; margin: 0; }
+ul.rank li { display: flex; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: .88rem; }
+ul.rank li:first-child { border-top: 0; }
+ul.rank li .grow { flex: 1; }

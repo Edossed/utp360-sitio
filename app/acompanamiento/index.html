@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pauta de Acompañamiento de Aula</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>Pauta de Acompañamiento de Aula</h1>
+      <span class="sub" id="subtitulo">Innovación Pedagógica</span>
+    </div>
+    <div class="spacer"></div>
+    <span class="chip" id="estadoConexion"><span class="dot"></span><span>—</span></span>
+    <button class="btn small" id="btnMis">Observaciones del equipo</button>
+    <button class="btn small" id="btnNueva">Nueva</button>
+    <a class="btn small ghost" href="utp.html">Área UTP</a>
+  </header>
+  <div class="progress" aria-hidden="true"><div id="barra"></div></div>
+
+  <main id="app">
+    <div class="notice hidden" id="avisoLocal"></div>
+
+    <section class="card" id="secDatos">
+      <h2>1. Datos de la observación</h2>
+      <div class="grid">
+        <label class="f">Docente observado/a
+          <select id="docente" required><option value="">Seleccione…</option></select>
+        </label>
+        <label class="f">Grupo CPA
+          <input id="grupo" readonly placeholder="Automático">
+        </label>
+        <label class="f">Curso
+          <input id="curso" placeholder="Ej.: 5°C">
+        </label>
+        <label class="f">Asignatura
+          <input id="asignatura" placeholder="Ej.: Lenguaje">
+        </label>
+        <label class="f">Fecha
+          <input id="fecha" type="date">
+        </label>
+        <label class="f">Hora inicio
+          <input id="horaInicio" type="time">
+        </label>
+        <label class="f">Hora término
+          <input id="horaFin" type="time">
+        </label>
+        <label class="f">Observador/a
+          <input id="observador" placeholder="Nombre de quien observa">
+        </label>
+        <label class="f">Clase compartida con (opcional)
+          <select id="coDocente"><option value="">—</option></select>
+        </label>
+        <label class="f wide">Objetivo de la clase
+          <textarea id="objetivo" rows="2" placeholder="Objetivo de aprendizaje declarado o inferido"></textarea>
+        </label>
+        <label class="f wide">Herramientas de IA utilizadas
+          <input id="herramientasIA" placeholder="Ej.: ChatGPT, Gemini, MagicSchool, Canva IA, Diffit…">
+        </label>
+        <div class="f wide">
+          <span>Uso de IA en</span>
+          <div class="checks" id="usosIA"></div>
+        </div>
+        <div class="f wide">
+          <span>Evidencias de innovación pedagógica presentadas por el/la docente</span>
+          <div class="checks" id="evidenciasIA"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="actions" style="margin:-4px 0 12px">
+      <label class="checks small"><label><input type="checkbox" id="compacto"> Vista compacta (ocultar descriptores de nivel)</label></label>
+    </div>
+
+    <div id="rubrica"></div>
+
+    <section class="card" id="secRetro">
+      <h2>3. Retroalimentación</h2>
+      <p class="small muted" style="margin-top:-6px">Genere un borrador a partir de los niveles marcados y edítelo antes de imprimir.</p>
+      <div class="actions" style="margin-bottom:12px">
+        <button class="btn" id="btnGenerar">Generar retroalimentación</button>
+      </div>
+      <div class="grid">
+        <label class="f wide">Fortalezas observadas durante la clase<textarea id="r_fortalezas" rows="5"></textarea></label>
+        <label class="f wide">Aspectos a mejorar<textarea id="r_mejoras" rows="4"></textarea></label>
+        <label class="f wide">Acuerdos y compromisos<textarea id="r_acuerdos" rows="3"></textarea></label>
+        <label class="f">Fecha de retroalimentación<input type="date" id="r_fechaRetro"></label>
+        <label class="f">Fecha de seguimiento<input type="date" id="r_fechaSeguimiento"></label>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footbar">
+    <span class="status" id="estadoObs">Borrador</span>
+    <button class="btn" id="btnDuplicar" title="Copiar esta observación para el/la docente con quien comparte la clase">Duplicar para co-docente</button>
+    <button class="btn" id="btnVista">Vista previa</button>
+    <button class="btn" id="btnImprimir">Imprimir</button>
+    <button class="btn primary" id="btnGuardar">Guardar en Drive</button>
+  </footer>
+
+  <script src="assets/config.js"></script>
+  <script src="assets/rubrica.js"></script>
+  <script src="assets/common.js"></script>
+  <script src="assets/nomina-local.js" onerror="window.NOMINA_LOCAL=null"></script>
+  <script src="assets/pauta.js"></script>
+  <!-- Conexión con la plataforma UTP360: solo entra quien tenga habilitado este producto -->
+  <script>window.UTP360_PRODUCTO = "Acompañamiento al Aula";</script>
+  <script src="/guardia.js"></script>
+</body>
+</html>
