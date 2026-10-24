@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Área UTP · Acompañamiento</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="assets/app.css">
+  <link rel="stylesheet" href="assets/utp.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>Área UTP · Análisis de acompañamiento</h1>
+      <span class="sub" id="subtitulo">Acceso restringido</span>
+    </div>
+    <div class="spacer"></div>
+    <span class="chip" id="fuente"><span class="dot"></span><span>Sin datos</span></span>
+    <button class="btn small hidden" id="btnRecargar">Actualizar</button>
+    <button class="btn small hidden" id="btnSalir">Salir</button>
+    <a class="btn small ghost" href="index.html">Pauta</a>
+  </header>
+
+  <main id="login">
+    <section class="card" style="max-width:460px;margin:40px auto">
+      <h2>Ingreso UTP</h2>
+      <p class="small muted">Los datos se leen directamente desde la planilla privada en Google Drive. La clave se verifica en el servidor y se olvida al cerrar la pestaña o presionar «Salir».</p>
+      <div id="loginConectado">
+        <label class="f">Clave UTP<input id="clave" type="password" autocomplete="current-password"></label>
+        <p class="small" id="loginErr" style="color:var(--danger)"></p>
+        <div class="actions"><button class="btn primary" id="btnEntrar">Ingresar</button></div>
+      </div>
+      <div id="loginLocal" class="hidden">
+        <div class="notice">La conexión con Google Drive aún no está configurada.</div>
+        <div class="actions">
+          <button class="btn primary" id="btnDemo">Ver con datos de ejemplo</button>
+          <button class="btn" id="btnLocales">Usar observaciones de este equipo</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <main id="panel" class="hidden">
+    <div class="filters">
+      <label class="f">Grupo CPA<select id="fGrupo"></select></label>
+      <label class="f">Desde<input type="date" id="fDesde"></label>
+      <label class="f">Hasta<input type="date" id="fHasta"></label>
+      <label class="f">Observador/a<select id="fObs"></select></label>
+      <div class="spacer"></div>
+      <button class="btn small" id="btnCSV">Exportar CSV</button>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="resumen" aria-selected="true">Resumen</button>
+      <button role="tab" data-tab="indicadores">Indicadores</button>
+      <button role="tab" data-tab="docentes">Docentes</button>
+      <button role="tab" data-tab="grupos">Grupos CPA</button>
+      <button role="tab" data-tab="informes">Informes privados</button>
+    </nav>
+    <div id="vista"></div>
+  </main>
+  <div class="tip hidden" id="tip" role="tooltip"></div>
+
+  <script src="assets/config.js"></script>
+  <script src="assets/rubrica.js"></script>
+  <script src="assets/common.js"></script>
+  <script src="assets/nomina-local.js" onerror="window.NOMINA_LOCAL=null"></script>
+  <script src="assets/utp.js"></script>
+  <!-- Conexión con la plataforma UTP360: solo entra quien tenga habilitado este producto -->
+  <script>window.UTP360_PRODUCTO = "Acompañamiento al Aula";</script>
+  <script src="/guardia.js"></script>
+</body>
+</html>
