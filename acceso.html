@@ -37,12 +37,12 @@
   .wrap{max-width:720px;margin:0 auto;padding:0 24px;}
   #panelVista .wrap{max-width:980px;}
 
-  header{padding:22px 0;border-bottom:1px solid var(--border);}
+  header{padding:18px 0;background:linear-gradient(150deg,#142b4d 0%,#1f3a5f 55%,#2b4d7a 100%);}
   .header-row{max-width:1160px;margin:0 auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;}
-  .logo-badge{display:inline-flex;align-items:center;background:#F7F5EF;padding:9px 17px;border-radius:12px;}
+  .logo-badge{display:inline-flex;align-items:center;background:#FFFFFF;padding:9px 17px;border-radius:12px;}
   .logo-img{height:31px;width:auto;display:block;}
-  .back-link{font-size:14.5px;font-weight:600;color:var(--text-muted);}
-  .back-link:hover{color:var(--text);}
+  .back-link{font-size:14.5px;font-weight:600;color:#dbe5f5;}
+  .back-link:hover{color:#fff;}
 
   main{padding:64px 0 90px;}
   .eyebrow{
@@ -121,19 +121,20 @@
   .seats{margin-top:14px;font-size:13.5px;color:var(--text-muted);}
   .seats strong{color:var(--text);}
   .tools-title{font-family:'Montserrat';font-weight:800;font-size:17px;margin:26px 0 12px;}
-  .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
-  .tool{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--paper);display:flex;flex-direction:column;gap:12px;}
-  .tool .p-tag{margin-bottom:0;align-self:flex-start;}
-  .tool .tool-state{font-size:13px;color:var(--text-muted);font-weight:600;}
+  .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;}
+  .tool{border:1px solid var(--border);border-radius:20px;padding:26px 20px 22px;background:#fff;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;box-shadow:0 10px 28px -20px rgba(31,58,95,.5);}
+  .tool .ticon{width:64px;height:64px;border-radius:19px;display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:6px;}
+  .tool .ticon svg{width:32px;height:32px;}
+  .tool h3{font-family:'Montserrat';font-size:18px;font-weight:800;color:var(--ink);margin:0;line-height:1.2;}
+  .tool .tool-state{font-size:12.5px;color:var(--text-muted);font-weight:600;}
   .tool .tool-state.on{color:#1d7a3a;}
-  .tool-desc{font-size:13.5px;color:var(--text-muted);line-height:1.45;flex:1;}
-  .tools-sub{margin:-6px 0 14px;color:var(--text-muted);font-size:14.5px;}
-  .tool-open{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:100px;font-weight:700;font-size:14px;background:var(--ink);color:var(--paper);transition:background .15s;}
+  .tool-desc{font-size:14px;color:var(--text-muted);line-height:1.45;flex:1;}
+  .tools-sub{margin:-6px 0 16px;color:var(--text-muted);font-size:14.5px;}
+  .tool-open{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:100px;font-weight:700;font-size:14px;background:var(--ink);color:#fff;transition:background .15s;width:100%;margin-top:6px;}
   .tool-open:hover{background:var(--olive-dark);}
   .tool-open{box-sizing:border-box;min-height:42px;line-height:1.2;text-align:center;}
-  .tool.locked{opacity:.62;border-style:dashed;}
+  .tool.locked{opacity:.65;border-style:dashed;box-shadow:none;}
   .tool.locked .tool-open{background:transparent;color:var(--text-muted);border:1px solid var(--border);}
-
 
   /* ---------- Puerta de entrada ---------- */
   .puerta{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#1f3a5f 0%,#2b4d7a 60%,#3f6aa3 100%);}
@@ -163,8 +164,8 @@
   .puerta-back{display:block;text-align:center;margin-top:22px;font-size:13.5px;color:var(--text-muted);}
   .puerta-back:hover{color:var(--text);}
   #panelVista[hidden]{display:none;}
-  .logout{background:none;border:1px solid var(--border);border-radius:100px;padding:8px 16px;font-weight:700;font-size:13.5px;color:var(--text);cursor:pointer;font-family:inherit;}
-  .logout:hover{border-color:var(--ink);}
+  .logout{background:none;border:1px solid rgba(255,255,255,.55);border-radius:100px;padding:8px 16px;font-weight:700;font-size:13.5px;color:#fff;cursor:pointer;font-family:inherit;}
+  .logout:hover{background:rgba(255,255,255,.12);border-color:#fff;}
   @media (max-width:480px){ .puerta{padding:12px;align-items:flex-start;padding-top:28px;} .puerta-card{padding:24px 20px;} }
   footer{padding:36px 0;border-top:1px solid var(--border);text-align:center;}
   .foot-copy{font-size:13px;color:var(--text-muted);}
@@ -261,20 +262,32 @@
 
   const resultBox = document.getElementById('resultBox');
 
-  const PRODUCT_COLORS = {
-    'planificador': '#F2B93B',
-    'comprensión lectora': '#3F63C9',
-    'comprension lectora': '#3F63C9',
-    'aula check': '#6E7C3D',
-    'evalúa': '#E86A50',
-    'evalua': '#E86A50',
-    'integración': '#7C5A9E',
-    'integracion': '#7C5A9E'
+  // Nombres y colores con los que se muestran los productos (la hoja "Productos" puede conservar sus nombres internos).
+  const CATALOGO = {
+    'planificador':        {nombre:'Planificación',          grad:'linear-gradient(145deg,#4f78d6,#2b4d7a)', icono:'p', desc:'Plataforma para realizar el proceso de planificación anual, de unidad y clase a clase.'},
+    'planificación':       {nombre:'Planificación',          grad:'linear-gradient(145deg,#4f78d6,#2b4d7a)', icono:'p', desc:'Plataforma para realizar el proceso de planificación anual, de unidad y clase a clase.'},
+    'planificacion':       {nombre:'Planificación',          grad:'linear-gradient(145deg,#4f78d6,#2b4d7a)', icono:'p', desc:'Plataforma para realizar el proceso de planificación anual, de unidad y clase a clase.'},
+    'evalúa':              {nombre:'Evaluación',             grad:'linear-gradient(145deg,#4aa564,#2f7a45)', icono:'e', desc:'Plataforma para realizar el proceso de evaluación, revisión y análisis de datos. Incluye remediales.'},
+    'evalua':              {nombre:'Evaluación',             grad:'linear-gradient(145deg,#4aa564,#2f7a45)', icono:'e', desc:'Plataforma para realizar el proceso de evaluación, revisión y análisis de datos. Incluye remediales.'},
+    'evaluación':          {nombre:'Evaluación',             grad:'linear-gradient(145deg,#4aa564,#2f7a45)', icono:'e', desc:'Plataforma para realizar el proceso de evaluación, revisión y análisis de datos. Incluye remediales.'},
+    'evaluacion':          {nombre:'Evaluación',             grad:'linear-gradient(145deg,#4aa564,#2f7a45)', icono:'e', desc:'Plataforma para realizar el proceso de evaluación, revisión y análisis de datos. Incluye remediales.'},
+    'aula check':          {nombre:'Acompañamiento al Aula', grad:'linear-gradient(145deg,#f08a5d,#d4552f)', icono:'a', desc:'Para equipos directivos: pautas de acompañamiento al aula y análisis institucionales.'},
+    'acompañamiento al aula':{nombre:'Acompañamiento al Aula',grad:'linear-gradient(145deg,#f08a5d,#d4552f)', icono:'a', desc:'Para equipos directivos: pautas de acompañamiento al aula y análisis institucionales.'},
+    'acompañamiento':      {nombre:'Acompañamiento al Aula', grad:'linear-gradient(145deg,#f08a5d,#d4552f)', icono:'a', desc:'Para equipos directivos: pautas de acompañamiento al aula y análisis institucionales.'},
+    'integración':         {nombre:'Integración',            grad:'linear-gradient(145deg,#9a78bf,#6a4a91)', icono:'i', desc:'Dinamiza los procesos evaluativos de los programas de integración.'},
+    'integracion':         {nombre:'Integración',            grad:'linear-gradient(145deg,#9a78bf,#6a4a91)', icono:'i', desc:'Dinamiza los procesos evaluativos de los programas de integración.'}
   };
-
-  function tagColor(producto){
+  // Productos que ya no se ofrecen: no se muestran en el panel.
+  const OCULTOS = ['comprensión lectora','comprension lectora'];
+  const ICONOS = {
+    p:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    e:'<path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 13l2 2 4-4.5"/>',
+    a:'<circle cx="9" cy="8" r="3"/><path d="M2.5 20c0-3.3 2.9-6 6.5-6s6.5 2.7 6.5 6"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18.5 14.5c1.8.9 3 2.7 3 5.5"/>',
+    i:'<path d="M10 4a2 2 0 1 1 4 0v2h4a1 1 0 0 1 1 1v4h-2a2 2 0 1 0 0 4h2v4a1 1 0 0 1-1 1h-4v-2a2 2 0 1 0-4 0v2H6a1 1 0 0 1-1-1v-4h2a2 2 0 1 0 0-4H5V7a1 1 0 0 1 1-1h4V4z"/>'
+  };
+  function infoProducto(producto){
     const key = (producto || '').trim().toLowerCase();
-    return PRODUCT_COLORS[key] || '#6E7C3D';
+    return CATALOGO[key] || {nombre: producto, grad:'linear-gradient(145deg,#4f78d6,#2b4d7a)', icono:'p', desc:''};
   }
 
   function escapeHtml(str){
@@ -333,18 +346,6 @@
     return `${base}${sep}c=${encodeURIComponent(codigo || '')}`;
   }
 
-  const DESCRIPCIONES = {
-    'planificador': 'Calendario compartido de reuniones, acompañamientos, revisiones de planificación y consejos de resultados.',
-    'comprensión lectora': 'Registro y análisis de comprensión y velocidad lectora por estudiante y curso.',
-    'comprension lectora': 'Registro y análisis de comprensión y velocidad lectora por estudiante y curso.',
-    'aula check': 'Observaciones de aula desde el celular o tablet, con informes de acompañamiento automáticos.',
-    'evalúa': 'Corrección automática, notas y análisis de resultados por pregunta y por Objetivo de Aprendizaje.',
-    'evalua': 'Corrección automática, notas y análisis de resultados por pregunta y por Objetivo de Aprendizaje.',
-    'integración': 'Planes de Adecuación Curricular Individual (PACI) guiados y respaldados, alineados al Decreto N°83.',
-    'integracion': 'Planes de Adecuación Curricular Individual (PACI) guiados y respaldados, alineados al Decreto N°83.'
-  };
-  function descripcion(p){ return DESCRIPCIONES[(p || '').trim().toLowerCase()] || ''; }
-
   function renderSuccess(data){
     const dias = data.diasRestantes;
     let badgeClass = 'ok', badgeText = `${dias} días restantes`;
@@ -353,24 +354,29 @@
     if (dias === 1) badgeText = '1 día restante';
 
     const esInst = (data.tipo || '').toLowerCase().indexOf('inst') === 0;
-    const productos = data.productos || [];
-    const contratados = productos.filter(p => p.contratado);
-    const noContratados = productos.filter(p => !p.contratado);
+    const productos = (data.productos || []).filter(p => OCULTOS.indexOf((p.producto || '').trim().toLowerCase()) === -1);
+    const orden = p => 'peai'.indexOf(infoProducto(p.producto).icono);
+    const contratados = productos.filter(p => p.contratado).sort((x, y) => orden(x) - orden(y));
+    const noContratados = productos.filter(p => !p.contratado).sort((x, y) => orden(x) - orden(y));
 
     const cupos = (esInst && (data.rol || '').toLowerCase() === 'administrador')
       ? `<p class="seats">Cupos de usuarios en uso: <strong>${data.cuposUsados} de ${data.cupos}</strong></p>` : '';
 
-    const card = (p, activo) => `
+    const card = (p, activo) => {
+      const info = infoProducto(p.producto);
+      return `
       <div class="tool ${activo ? '' : 'locked'}">
-        <span class="p-tag" style="background:${tagColor(p.producto)};">${escapeHtml(p.producto.toUpperCase())}</span>
-        <p class="tool-desc">${escapeHtml(descripcion(p.producto))}</p>
+        <span class="ticon" style="background:${info.grad};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONOS[info.icono]}</svg></span>
+        <h3>${escapeHtml(info.nombre)}</h3>
+        <p class="tool-desc">${escapeHtml(info.desc)}</p>
         <span class="tool-state ${activo ? 'on' : ''}">${activo ? '● Activa en tu cuenta' : 'No incluida en tu contrato'}</span>
         ${activo && p.propio
-          ? `<button type="button" class="tool-open" data-sso="${escapeHtml(p.producto)}" data-enlace="${escapeHtml(p.enlace)}" style="border:none;cursor:pointer;font-family:inherit;">Abrir ${escapeHtml(p.producto)}</button>`
+          ? `<button type="button" class="tool-open" data-sso="${escapeHtml(p.producto)}" data-enlace="${escapeHtml(p.enlace)}" data-etiqueta="Abrir ${escapeHtml(info.nombre)}" style="border:none;cursor:pointer;font-family:inherit;">Abrir ${escapeHtml(info.nombre)}</button>`
           : activo
-          ? `<a class="tool-open" href="${escapeHtml(enlaceHerramienta(p, data._codigo))}" target="_blank" rel="noopener">Abrir ${escapeHtml(p.producto)}</a>`
-          : `<a class="tool-open" href="mailto:contacto@utp360.cl?subject=${encodeURIComponent('Quiero contratar ' + p.producto)}">Quiero contratarla</a>`}
+          ? `<a class="tool-open" href="${escapeHtml(enlaceHerramienta(p, data._codigo))}" target="_blank" rel="noopener">Abrir ${escapeHtml(info.nombre)}</a>`
+          : `<a class="tool-open" href="mailto:contacto@utp360.cl?subject=${encodeURIComponent('Quiero contratar ' + info.nombre)}">Quiero contratarlo</a>`}
       </div>`;
+    };
     const catalogo = contratados.concat(noContratados);
 
     resultBox.className = 'show';
@@ -389,8 +395,8 @@
           <div><span>Vence</span><strong>${escapeHtml(data.fechaFin || '—')}</strong></div>
         </div>
         ${cupos}
-        <p class="tools-title">Herramientas UTP360</p>
-        <p class="tools-sub">${contratados.length === productos.length ? 'Tu contrato incluye toda la suite. Elige con cuál quieres trabajar.' : `Tienes <strong>${contratados.length} de ${productos.length}</strong> herramientas activas. Las demás se habilitan al contratarlas.`}</p>
+        <p class="tools-title">Tus productos UTP360</p>
+        <p class="tools-sub">${contratados.length === productos.length ? 'Tu contrato incluye todos los productos. Elige con cuál quieres trabajar.' : `Tienes <strong>${contratados.length} de ${productos.length}</strong> productos activos. Los demás se habilitan al contratarlos.`}</p>
         <div class="tools-grid">${catalogo.map(p => card(p, contratados.indexOf(p) !== -1)).join('')}</div>
       </div>`;
     resultBox.querySelectorAll('[data-sso]').forEach(btn => {

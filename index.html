@@ -4,50 +4,57 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UTP360 — Soluciones para la gestión pedagógica</title>
-<meta name="description" content="UTP360: herramientas digitales para planificar, evaluar, acompañar y analizar la gestión pedagógica. Datos que impulsan mejores decisiones.">
+<meta name="description" content="UTP360: plataforma para planificar, evaluar, acompañar y analizar la gestión pedagógica. Datos que impulsan mejores decisiones.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#1C231C;
-    --ink-soft:#3A4235;
-    --olive:#6E7C3D;
-    --olive-dark:#57642F;
-    --sage:#B7C0AC;
+    --ink:#1f3a5f;
+    --ink-soft:#3d5478;
+    --olive:#2b4d7a;
+    --olive-dark:#1f3a5f;
+    --sage:#c9d5e6;
     --sun:#F2B93B;
     --coral:#E86A50;
     --sky:#3F63C9;
     --lila:#7C5A9E;
-    --paper:#F7F5EF;
-    --paper-2:#EFEDE2;
-    --text:#1C231C;
-    --text-muted:#5B6357;
+    --green:#3A8A4A;
+    --paper:#f4f6f9;
+    --paper-2:#e9eef5;
+    --text:#1b2433;
+    --text-muted:#56627a;
     --card-bg:#FFFFFF;
-    --border: rgba(28,35,26,0.13);
-    --shadow: 0 1px 2px rgba(28,35,26,0.06);
+    --border: rgba(31,58,95,0.14);
+    --shadow: 0 1px 2px rgba(31,58,95,0.08);
     --radius: 14px;
+    --hero-a:#1f3a5f;
+    --hero-b:#3d5f93;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --ink:#F2F1EA;
-      --paper:#14170F;
-      --paper-2:#1B1F15;
-      --text:#F2F1EA;
-      --text-muted:#AAB2A0;
-      --card-bg:#1E2318;
-      --border: rgba(242,241,234,0.12);
+      --ink:#dbe5f5;
+      --olive:#8fb0e6;
+      --olive-dark:#b9cdf0;
+      --paper:#0f1828;
+      --paper-2:#16233a;
+      --text:#e8eef8;
+      --text-muted:#9fb0cc;
+      --card-bg:#17233a;
+      --border: rgba(219,229,245,0.14);
       --shadow: 0 1px 2px rgba(0,0,0,0.4);
     }
   }
   :root[data-theme="dark"]{
-    --ink:#F2F1EA;
-    --paper:#14170F;
-    --paper-2:#1B1F15;
-    --text:#F2F1EA;
-    --text-muted:#AAB2A0;
-    --card-bg:#1E2318;
-    --border: rgba(242,241,234,0.12);
+    --ink:#dbe5f5;
+    --olive:#8fb0e6;
+    --olive-dark:#b9cdf0;
+    --paper:#0f1828;
+    --paper-2:#16233a;
+    --text:#e8eef8;
+    --text-muted:#9fb0cc;
+    --card-bg:#17233a;
+    --border: rgba(219,229,245,0.14);
     --shadow: 0 1px 2px rgba(0,0,0,0.4);
   }
 
@@ -75,7 +82,7 @@
 
   /* ---------- Brand mark (logo real de identidad) ---------- */
   .logo-badge{
-    display:inline-flex;align-items:center;background:#F7F5EF;
+    display:inline-flex;align-items:center;background:#FFFFFF;
     padding:9px 17px;border-radius:12px;line-height:0;
   }
   .logo-img{height:31px;width:auto;display:block;}
@@ -85,7 +92,7 @@
   .ring{
     border-radius:50%;
     background:conic-gradient(
-      var(--olive) 0deg 82deg, transparent 82deg 92deg,
+      var(--green) 0deg 82deg, transparent 82deg 92deg,
       var(--sun) 92deg 172deg, transparent 172deg 182deg,
       var(--coral) 182deg 262deg, transparent 262deg 272deg,
       var(--sky) 272deg 352deg, transparent 352deg 360deg
@@ -98,7 +105,7 @@
   @media (prefers-reduced-motion: reduce){ .ring--hero{animation:none;} }
   .ring-center{
     position:absolute;font-family:'Montserrat';font-weight:800;
-    font-size:clamp(30px,4vw,40px);color:var(--olive);letter-spacing:-0.01em;
+    font-size:clamp(30px,4vw,40px);color:#fff;letter-spacing:-0.01em;
   }
 
   @keyframes fadeUp{ from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
@@ -131,8 +138,8 @@
     font-family:'Inter';
   }
   .btn:active{transform:scale(0.97);}
-  .btn-primary{background:var(--ink);color:var(--paper);}
-  .btn-primary:hover{background:var(--olive-dark);}
+  .btn-primary{background:#1f3a5f;color:#fff;}
+  .btn-primary:hover{background:#2b4d7a;}
   .btn-ghost{border-color:var(--border);color:var(--text);}
   .btn-ghost:hover{border-color:var(--ink);}
   .nav-login{padding:10px 18px;font-size:14.5px;gap:8px;}
@@ -149,25 +156,67 @@
   #mobileMenu a{padding:12px 4px;font-weight:500;color:var(--text);border-bottom:1px solid var(--border);}
 
   /* ---------- Hero ---------- */
-  .hero{padding-top:64px;}
-  .hero .wrap{display:grid;grid-template-columns:1.1fr 0.9fr;gap:48px;align-items:center;}
-  @media(max-width:860px){ .hero .wrap{grid-template-columns:1fr;text-align:left;} }
-  .hero h1{font-size:clamp(34px,5vw,54px);font-weight:800;line-height:1.08;}
-  .hero h1 .l2{color:var(--olive);}
-  .hero .sub{margin-top:22px;font-size:19px;color:var(--text-muted);max-width:46ch;}
-  .hero .ctas{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap;}
-  .hero-visual{position:relative;display:flex;align-items:center;justify-content:center;min-height:260px;}
-  @media(max-width:860px){ .hero-visual{margin-top:8px;justify-content:flex-start;} }
-
-  /* ---------- Value strip (íconos grandes) ---------- */
-  .value-strip{padding:44px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
-  .value-strip .wrap{display:flex;gap:0;overflow-x:auto;}
-  .value-item{
-    flex:1;min-width:118px;display:flex;flex-direction:column;align-items:center;gap:16px;
-    text-align:center;padding:10px 6px;
+  .hero{
+    padding:64px 0 80px;color:#fff;overflow:hidden;
+    background:
+      radial-gradient(900px 520px at 78% 40%, rgba(70,120,210,.55), transparent 70%),
+      linear-gradient(150deg,#142b4d 0%,#1f3a5f 45%,#2b4d7a 100%);
   }
-  .value-item svg{width:58px;height:58px;color:var(--olive);}
-  .value-item span{font-size:15px;font-weight:700;color:var(--text-muted);}
+  .hero .wrap{display:grid;grid-template-columns:0.9fr 1.1fr;gap:36px;align-items:center;}
+  @media(max-width:980px){ .hero .wrap{grid-template-columns:1fr;} .hero{padding:44px 0 52px;} }
+  .hero h1{font-size:clamp(34px,4.6vw,54px);font-weight:800;line-height:1.08;color:#fff;}
+  .hero h1 .l2{color:#a9c4f2;}
+  .hero .sub{margin-top:22px;font-size:18.5px;color:#dbe5f5;max-width:46ch;}
+  .hero .ctas{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap;}
+  .hero .btn-primary{background:#fff;color:#1f3a5f;}
+  .hero .btn-primary:hover{background:#e3ebf8;}
+  .hero .btn-ghost{border-color:rgba(255,255,255,.55);color:#fff;}
+  .hero .btn-ghost:hover{border-color:#fff;background:rgba(255,255,255,.1);}
+
+  .hero-visual{position:relative;min-height:470px;}
+  @media(max-width:980px){ .hero-visual{min-height:0;} }
+  .laptop{position:absolute;left:0;right:7%;top:17%;}
+  @media(max-width:980px){ .laptop{position:relative;left:auto;right:auto;top:auto;width:100%;} }
+  .laptop-screen{
+    background:#0d1626;border-radius:14px 14px 4px 4px;padding:9px 9px 11px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.08) inset;
+  }
+  .laptop-screen svg{display:block;width:100%;height:auto;border-radius:6px;background:#f4f6f9;}
+  .laptop-base{
+    height:15px;margin:0 -4%;border-radius:0 0 18px 18px;
+    background:linear-gradient(180deg,#aab6c8 0%,#6f7d93 70%,#4d596c 100%);
+    box-shadow:0 22px 30px -12px rgba(0,0,0,.55);position:relative;
+  }
+  .laptop-base::after{
+    content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);
+    width:16%;height:6px;border-radius:0 0 8px 8px;background:#47536a;
+  }
+  .demo-note{font-size:11.5px;color:#a9bcdc;text-align:center;margin-top:16px;}
+
+  .float{
+    position:absolute;display:flex;align-items:center;gap:12px;min-width:196px;
+    padding:12px 16px 12px 12px;border-radius:16px;color:#fff;
+    background:rgba(16,34,63,.88);border:1px solid rgba(255,255,255,.28);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    box-shadow:0 18px 36px -16px rgba(0,0,0,.55);
+    font-size:14px;font-weight:700;line-height:1.2;
+  }
+  .float i{
+    width:38px;height:38px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;
+  }
+  .float i svg{width:21px;height:21px;}
+  .float small{display:block;font-weight:500;font-size:11.5px;color:#cfdcf2;margin-top:3px;}
+  .float.f1{top:3%;left:-1%;}
+  .float.f2{top:-1%;right:6%;}
+  .float.f3{top:46%;right:-3%;}
+  .float.f4{bottom:3%;right:3%;}
+  @media(max-width:980px){
+    .hero-visual{display:flex;flex-direction:column;gap:14px;}
+    .float{position:static;order:2;min-width:0;}
+    .float-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;order:2;}
+    .laptop{order:1;}
+  }
+  @media(max-width:520px){ .float-grid{grid-template-columns:1fr;} }
 
   /* ---------- Benefits (íconos grandes) ---------- */
   .benefits-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;margin-top:48px;}
@@ -188,83 +237,26 @@
     padding:5px 13px;border-radius:100px;margin-bottom:16px;
   }
 
-  /* ---------- Tools nav pills ---------- */
-  .tool-pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:32px;}
-  .tool-pill{
-    padding:9px 18px;border-radius:100px;border:1px solid var(--border);font-size:14px;font-weight:600;
-    color:var(--text-muted);transition:all .15s;
+  /* ---------- Productos (tarjetas) ---------- */
+  .products-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:44px;}
+  @media(max-width:1060px){ .products-grid{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:600px){ .products-grid{grid-template-columns:1fr;} }
+  .product-card{
+    background:var(--card-bg);border:1px solid var(--border);border-radius:20px;
+    padding:30px 24px 28px;text-align:center;box-shadow:0 10px 30px -18px rgba(31,58,95,0.35);
+    display:flex;flex-direction:column;align-items:center;
   }
-  .tool-pill:hover{border-color:var(--ink);color:var(--text);}
-
-  /* ---------- Product sections ---------- */
-  .product{
-    padding:72px 0;border-top:1px solid var(--border);scroll-margin-top:76px;
+  .product-icon{
+    width:76px;height:76px;border-radius:22px;display:flex;align-items:center;justify-content:center;
+    margin-bottom:20px;color:#fff;
   }
-  .product .wrap{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;}
-  @media(max-width:860px){ .product .wrap{grid-template-columns:1fr;} }
-  .product:nth-of-type(even) .p-copy{order:2;}
-  @media(max-width:860px){ .product .p-copy{order:1 !important;} }
-  .p-tag{
-    display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.03em;
-    padding:6px 13px;border-radius:8px;color:#fff;margin-bottom:18px;
-  }
-  .product h3{font-size:clamp(23px,3vw,30px);font-weight:800;line-height:1.2;}
-  .product .p-desc{margin-top:14px;color:var(--text-muted);font-size:16.5px;max-width:48ch;}
-  .chip-row{display:flex;flex-wrap:wrap;gap:9px;margin-top:22px;}
-  .chip{
-    font-size:13.5px;font-weight:600;padding:7px 14px;border-radius:100px;
-    background:var(--paper-2);border:1px solid var(--border);
-  }
-  .p-note{margin-top:22px;font-size:14.5px;font-weight:600;color:var(--ink-soft);}
-
-  .mock{
-    background:var(--card-bg);border:1px solid var(--border);border-radius:18px;
-    padding:22px;box-shadow: 0 10px 30px -14px rgba(28,35,26,0.28);
-  }
-  .mock-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-  .mock-dots{display:flex;gap:5px;}
-  .mock-dots i{width:8px;height:8px;border-radius:50%;background:var(--border);display:block;}
-
-  /* Planificador mock */
-  .cal-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px;}
-  .cal-cell{
-    border-radius:8px;padding:8px 6px;font-size:11.5px;font-weight:600;min-height:52px;
-    background:var(--paper-2);color:var(--text-muted);
-  }
-  .cal-cell.olive{background:color-mix(in srgb, var(--olive) 20%, transparent);color:var(--olive-dark);}
-  .cal-cell.sun{background:color-mix(in srgb, var(--sun) 30%, transparent);color:#8a6a12;}
-  .cal-cell.coral{background:color-mix(in srgb, var(--coral) 22%, transparent);color:#a83f26;}
-  .cal-cell.sky{background:color-mix(in srgb, var(--sky) 18%, transparent);color:var(--sky);}
-
-  /* Comprensión Lectora mock */
-  .trend-row{display:flex;align-items:center;justify-content:space-between;}
-  .trend-badge{background:color-mix(in srgb, var(--olive) 16%, transparent);color:var(--olive-dark);font-weight:700;font-size:13px;padding:4px 10px;border-radius:100px;}
-  .sparkline{display:flex;align-items:flex-end;gap:8px;height:70px;margin-top:18px;}
-  .sparkline i{flex:1;background:var(--sky);border-radius:4px 4px 0 0;opacity:.85;}
-  .mock-stat{font-size:28px;font-weight:800;font-family:'Montserrat';}
-  .mock-stat small{display:block;font-size:12px;font-weight:600;color:var(--text-muted);font-family:'Inter';}
-
-  /* Aula Check mock */
-  .check-list{display:flex;flex-direction:column;gap:11px;margin-top:4px;}
-  .check-item{display:flex;align-items:center;gap:10px;font-size:14.5px;font-weight:500;}
-  .check-box{width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;}
-  .check-box.done{background:var(--olive);}
-  .check-box.pending{border:2px solid var(--border);}
-
-  /* Evalúa mock */
-  .bars{display:flex;align-items:flex-end;gap:10px;height:120px;padding-top:10px;}
-  .bars i{flex:1;border-radius:6px 6px 0 0;background:var(--sage);display:block;}
-  .bars i.hi{background:var(--coral);}
-
-  /* Integración (PACI) mock */
-  .paci-field{display:flex;justify-content:space-between;font-size:13.5px;padding:9px 0;border-bottom:1px solid var(--border);}
-  .paci-field span{color:var(--text-muted);}
-  .paci-field strong{font-weight:700;}
-  .progress-bar{height:8px;border-radius:100px;background:var(--paper-2);overflow:hidden;margin-bottom:7px;}
-  .progress-bar i{display:block;height:100%;border-radius:100px;}
+  .product-icon svg{width:38px;height:38px;}
+  .product-card h3{font-size:21px;font-weight:800;line-height:1.2;color:var(--ink);}
+  .product-card p{margin-top:12px;color:var(--text-muted);font-size:15.5px;}
+  .products-cta{display:flex;justify-content:center;margin-top:40px;}
 
   /* ---------- Trust band (íconos grandes) ---------- */
-  .trust{background:var(--ink);color:var(--paper);}
+  .trust{background:#1f3a5f;color:#fff;}
   .trust .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;}
   @media(max-width:760px){ .trust .wrap{grid-template-columns:1fr 1fr;} }
   .trust-item{display:flex;align-items:flex-start;gap:16px;}
@@ -275,7 +267,7 @@
   .gift-card{
     background:var(--card-bg);border:1px solid var(--border);border-radius:18px;
     padding:32px;margin-top:40px;max-width:640px;
-    box-shadow: 0 10px 30px -14px rgba(28,35,26,0.22);
+    box-shadow: 0 10px 30px -14px rgba(31,58,95,0.22);
   }
   .calc-row{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-bottom:10px;}
   .calc-row input{
@@ -340,14 +332,14 @@
       <img class="logo-img" src="logo.png" alt="UTP360">
     </a>
     <nav class="nav-links">
-      <a href="#herramientas">Herramientas</a>
+      <a href="#productos">Productos</a>
       <a href="#regalo">Regalo</a>
       <a href="#nosotros">Nosotros</a>
       <a href="#contacto">Contacto</a>
     </nav>
     <div style="display:flex;align-items:center;gap:10px;">
       <a href="#contacto" class="btn btn-ghost nav-cta">Contáctanos</a>
-      <a href="acceso.html" class="btn btn-primary nav-login"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Ingresar</a>
+      <a href="acceso.html" class="btn btn-primary nav-login"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> Plataforma</a>
       <button class="burger" id="burgerBtn" aria-label="Abrir menú" aria-expanded="false">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
@@ -355,11 +347,11 @@
   </div>
   <div class="wrap">
     <div id="mobileMenu">
-      <a href="#herramientas">Herramientas</a>
+      <a href="#productos">Productos</a>
       <a href="#regalo">Regalo</a>
       <a href="#nosotros">Nosotros</a>
       <a href="#contacto">Contacto</a>
-      <a href="acceso.html" style="font-weight:700;">Ingresar a la plataforma</a>
+      <a href="acceso.html" style="font-weight:700;">Plataforma</a>
     </div>
   </div>
 </header>
@@ -370,53 +362,59 @@
       <h1>Más gestión pedagógica,<br><span class="l2">más impacto en las aulas.</span></h1>
       <p class="sub">Herramientas digitales que registran, ordenan y analizan el trabajo pedagógico de tu equipo, para que las decisiones se tomen con datos y no con suposiciones.</p>
       <div class="ctas">
-        <a href="#herramientas" class="btn btn-primary">Ver herramientas</a>
+        <a href="#productos" class="btn btn-primary">Ver productos</a>
         <a href="#contacto" class="btn btn-ghost">Hablemos</a>
       </div>
     </div>
     <div class="hero-visual fade-in d1">
-      <div class="ring ring--hero"></div>
-      <span class="ring-center">360°</span>
+      <div class="laptop">
+        <div class="laptop-screen">
+      <svg viewBox="0 0 640 400" role="img" aria-label="Vista de ejemplo del panel de UTP360" xmlns="http://www.w3.org/2000/svg" font-family="Inter,system-ui,sans-serif">
+        <rect width="640" height="400" fill="#f4f6f9"/>
+        <rect width="132" height="400" fill="#fff"/><line x1="132" y1="0" x2="132" y2="400" stroke="#e1e7f0"/>
+        <image href="logo.png" x="14" y="14" width="104" height="31" preserveAspectRatio="xMidYMid meet"/>
+        <rect x="10" y="64" width="112" height="28" rx="8" fill="#1f3a5f"/><text x="24" y="82" font-size="10" font-weight="700" fill="#fff">Inicio</text>
+        <text x="24" y="116" font-size="10" fill="#56627a">Planificación</text>
+        <text x="24" y="146" font-size="10" fill="#56627a">Evaluación</text>
+        <text x="24" y="176" font-size="10" fill="#56627a">Acompañamiento</text>
+        <text x="24" y="206" font-size="10" fill="#56627a">Integración</text>
+        <text x="152" y="30" font-size="15" font-weight="800" fill="#1b2433">Hola, Equipo UTP</text>
+        <text x="152" y="46" font-size="8.6" fill="#6b7790">Resumen del trabajo pedagógico de tu establecimiento.</text>
+        <rect x="560" y="16" width="62" height="22" rx="7" fill="#fff" stroke="#e1e7f0"/><text x="572" y="31" font-size="9" font-weight="600" fill="#1b2433">2026  ▾</text>
+        <g transform="translate(152,62)"><rect width="104" height="64" rx="9" fill="#fff" stroke="#e1e7f0"/><rect x="10" y="11" width="16" height="16" rx="5" fill="#4f78d6"/><text x="32" y="23" font-size="8.2" font-weight="700" fill="#1b2433">Planificación</text><text x="10" y="46" font-size="18" font-weight="800" fill="#1f3a5f">12</text><text x="10" y="57" font-size="7.4" fill="#6b7790">unidades</text></g>
+        <g transform="translate(266,62)"><rect width="104" height="64" rx="9" fill="#fff" stroke="#e1e7f0"/><rect x="10" y="11" width="16" height="16" rx="5" fill="#3A8A4A"/><text x="32" y="23" font-size="8.2" font-weight="700" fill="#1b2433">Evaluación</text><text x="10" y="46" font-size="18" font-weight="800" fill="#1f3a5f">248</text><text x="10" y="57" font-size="7.4" fill="#6b7790">aplicadas</text></g>
+        <g transform="translate(380,62)"><rect width="104" height="64" rx="9" fill="#fff" stroke="#e1e7f0"/><rect x="10" y="11" width="16" height="16" rx="5" fill="#E86A50"/><text x="32" y="23" font-size="8.2" font-weight="700" fill="#1b2433">Acompañamiento</text><text x="10" y="46" font-size="18" font-weight="800" fill="#1f3a5f">18</text><text x="10" y="57" font-size="7.4" fill="#6b7790">al aula</text></g>
+        <g transform="translate(494,62)"><rect width="104" height="64" rx="9" fill="#fff" stroke="#e1e7f0"/><rect x="10" y="11" width="16" height="16" rx="5" fill="#7C5A9E"/><text x="32" y="23" font-size="8.2" font-weight="700" fill="#1b2433">Integración</text><text x="10" y="46" font-size="18" font-weight="800" fill="#1f3a5f">32</text><text x="10" y="57" font-size="7.4" fill="#6b7790">PACI</text></g>
+        <rect x="152" y="140" width="226" height="240" rx="10" fill="#fff" stroke="#e1e7f0"/>
+        <text x="166" y="162" font-size="10" font-weight="800" fill="#1b2433">Logro por Objetivo de Aprendizaje</text>
+        <g font-size="8.4" fill="#56627a">
+          <text x="166" y="196">OA 1</text><rect x="196" y="188" width="130" height="8" rx="4" fill="#e6ecf5"/><rect x="196" y="188" width="101" height="8" rx="4" fill="#4f78d6"/><text x="334" y="196" font-weight="700">78%</text>
+          <text x="166" y="228">OA 2</text><rect x="196" y="220" width="130" height="8" rx="4" fill="#e6ecf5"/><rect x="196" y="220" width="81" height="8" rx="4" fill="#E86A50"/><text x="334" y="228" font-weight="700">62%</text>
+          <text x="166" y="260">OA 3</text><rect x="196" y="252" width="130" height="8" rx="4" fill="#e6ecf5"/><rect x="196" y="252" width="110" height="8" rx="4" fill="#3A8A4A"/><text x="334" y="260" font-weight="700">85%</text>
+          <text x="166" y="292">OA 4</text><rect x="196" y="284" width="130" height="8" rx="4" fill="#e6ecf5"/><rect x="196" y="284" width="91" height="8" rx="4" fill="#F2B93B"/><text x="334" y="292" font-weight="700">70%</text>
+        </g>
+        <text x="166" y="330" font-size="8" fill="#6b7790">Bajo 50%: requiere plan de mejora.</text>
+        <rect x="166" y="342" width="198" height="24" rx="7" fill="#eef3fb"/><text x="178" y="358" font-size="8.6" font-weight="700" fill="#1f3a5f">Ver análisis por pregunta  →</text>
+        <rect x="390" y="140" width="232" height="240" rx="10" fill="#fff" stroke="#e1e7f0"/>
+        <text x="404" y="162" font-size="10" font-weight="800" fill="#1b2433">Evolución de resultados</text>
+        <g stroke="#eef1f6"><line x1="424" y1="186" x2="608" y2="186"/><line x1="424" y1="226" x2="608" y2="226"/><line x1="424" y1="266" x2="608" y2="266"/><line x1="424" y1="306" x2="608" y2="306"/></g>
+        <g font-size="7.5" fill="#8793a8"><text x="404" y="189">100</text><text x="408" y="229">75</text><text x="408" y="269">50</text><text x="408" y="309">25</text>
+        <text x="424" y="330">Mar</text><text x="456" y="330">Abr</text><text x="488" y="330">May</text><text x="520" y="330">Jun</text><text x="552" y="330">Jul</text><text x="584" y="330">Ago</text></g>
+        <path d="M430,290 L462,262 L494,266 L526,248 L558,244 L598,214 L598,306 L430,306 Z" fill="#4f78d6" opacity=".14"/>
+        <polyline points="430,290 462,262 494,266 526,248 558,244 598,214" fill="none" stroke="#4f78d6" stroke-width="2.2" stroke-linejoin="round"/>
+        <g fill="#4f78d6"><circle cx="430" cy="290" r="3"/><circle cx="462" cy="262" r="3"/><circle cx="494" cy="266" r="3"/><circle cx="526" cy="248" r="3"/><circle cx="558" cy="244" r="3"/><circle cx="598" cy="214" r="3"/></g>
+      </svg>
+        </div>
+        <div class="laptop-base"></div>
+        <p class="demo-note">Vista de ejemplo con datos ficticios.</p>
+      </div>
+      <div class="float f1"><i style="background:#4f78d6;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i><span>Planificación<small>Anual, unidad y clase</small></span></div>
+      <div class="float f2"><i style="background:#3A8A4A;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 13l2 2 4-4.5"/></svg></i><span>Evaluación<small>Análisis y remediales</small></span></div>
+      <div class="float f3"><i style="background:#E86A50;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2.5 20c0-3.3 2.9-6 6.5-6s6.5 2.7 6.5 6"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18.5 14.5c1.8.9 3 2.7 3 5.5"/></svg></i><span>Acompañamiento al Aula<small>Pautas y análisis</small></span></div>
+      <div class="float f4"><i style="background:#7C5A9E;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4a2 2 0 1 1 4 0v2h4a1 1 0 0 1 1 1v4h-2a2 2 0 1 0 0 4h2v4a1 1 0 0 1-1 1h-4v-2a2 2 0 1 0-4 0v2H6a1 1 0 0 1-1-1v-4h2a2 2 0 1 0 0-4H5V7a1 1 0 0 1 1-1h4V4z"/></svg></i><span>Integración<small>Procesos evaluativos</small></span></div>
     </div>
   </div>
 </section>
-
-<div class="value-strip">
-  <div class="wrap">
-    <div class="value-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="12" width="3.5" height="7"/><rect x="10.2" y="7" width="3.5" height="12"/><rect x="16.4" y="3" width="3.5" height="16"/></svg>
-      <span>Planificación</span>
-    </div>
-    <div class="value-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 12l2 2 4-4"/></svg>
-      <span>Evaluación</span>
-    </div>
-    <div class="value-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"/><circle cx="18" cy="9" r="2.4"/><path d="M22 20c0-2.6-2-4.7-4.5-5.4"/></svg>
-      <span>Acompañamiento</span>
-    </div>
-    <div class="value-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19V5a1 1 0 0 1 1-1h9l6 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M8 11h8M8 15h5"/></svg>
-      <span>Análisis de datos</span>
-    </div>
-    <div class="value-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg>
-      <span>Seguimiento</span>
-    </div>
-    <div class="value-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3a9 9 0 1 0 9 9h-9V3z"/><path d="M14 2.5A9 9 0 0 1 21.5 10H14V2.5z"/></svg>
-      <span>Resultados</span>
-    </div>
-    <div class="value-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3v18"/><path d="M5 4h12l-3 4 3 4H5"/></svg>
-      <span>Hitos</span>
-    </div>
-    <div class="value-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 6h6v6"/></svg>
-      <span>Desarrollo</span>
-    </div>
-  </div>
-</div>
 
 <section id="beneficios">
   <div class="wrap">
@@ -444,162 +442,48 @@
   </div>
 </section>
 
-<section id="herramientas" style="border-top:1px solid var(--border);padding:40px 0;">
+<section id="productos" style="border-top:1px solid var(--border);">
   <div class="wrap">
-    <div class="tool-pills">
-      <a href="#planificador" class="tool-pill">Planificador</a>
-      <a href="#comprension-lectora" class="tool-pill">Comprensión Lectora</a>
-      <a href="#aula-check" class="tool-pill">Aula Check</a>
-      <a href="#evalua" class="tool-pill">Evalúa</a>
-      <a href="#integracion" class="tool-pill">Integración</a>
+    <div class="section-head" style="max-width:720px;">
+      <span class="eyebrow">PRODUCTOS</span>
+      <h2>Cuatro productos para la gestión pedagógica</h2>
+      <p>Cada producto resuelve un proceso del trabajo técnico pedagógico y se usa desde una misma plataforma.</p>
+    </div>
+    <div class="products-grid">
+      <div class="product-card">
+        <div class="product-icon" style="background:linear-gradient(145deg,#4f78d6,#2b4d7a);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h3M13 14h3M8 17h3"/></svg>
+        </div>
+        <h3>Planificación</h3>
+        <p>Plataforma para realizar el proceso de planificación anual, de unidad y clase a clase.</p>
+      </div>
+      <div class="product-card">
+        <div class="product-icon" style="background:linear-gradient(145deg,#4aa564,#2f7a45);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 13l2 2 4-4.5"/></svg>
+        </div>
+        <h3>Evaluación</h3>
+        <p>Plataforma para realizar el proceso de evaluación, revisión y análisis de datos. Incluye remediales.</p>
+      </div>
+      <div class="product-card">
+        <div class="product-icon" style="background:linear-gradient(145deg,#f08a5d,#d4552f);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2.5 20c0-3.3 2.9-6 6.5-6s6.5 2.7 6.5 6"/><path d="M16 5.5a3 3 0 0 1 0 5.5M18.5 14.5c1.8.9 3 2.7 3 5.5"/></svg>
+        </div>
+        <h3>Acompañamiento al Aula</h3>
+        <p>Para equipos directivos: pautas de acompañamiento al aula y análisis institucionales.</p>
+      </div>
+      <div class="product-card">
+        <div class="product-icon" style="background:linear-gradient(145deg,#9a78bf,#6a4a91);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4a2 2 0 1 1 4 0v2h4a1 1 0 0 1 1 1v4h-2a2 2 0 1 0 0 4h2v4a1 1 0 0 1-1 1h-4v-2a2 2 0 1 0-4 0v2H6a1 1 0 0 1-1-1v-4h2a2 2 0 1 0 0-4H5V7a1 1 0 0 1 1-1h4V4z"/></svg>
+        </div>
+        <h3>Integración</h3>
+        <p>Dinamiza los procesos evaluativos de los programas de integración.</p>
+      </div>
+    </div>
+    <div class="products-cta">
+      <a href="acceso.html" class="btn btn-primary">Ir a la plataforma</a>
     </div>
   </div>
 </section>
-
-<article class="product" id="planificador">
-  <div class="wrap">
-    <div class="p-copy">
-      <span class="p-tag" style="background:var(--sun);color:#4a3a05;">PLANIFICADOR</span>
-      <h3>Organiza tu mes sin complicaciones</h3>
-      <p class="p-desc">Reuniones, acompañamientos, revisiones de planificación y consejos de resultados, ordenados en un solo calendario compartido.</p>
-      <div class="chip-row">
-        <span class="chip">Calendario</span>
-        <span class="chip">Recordatorios</span>
-        <span class="chip">Tareas</span>
-        <span class="chip">Informes</span>
-      </div>
-      <p class="p-note">Todas las tareas pedagógicas del mes, en un solo lugar.</p>
-    </div>
-    <div class="mock">
-      <div class="mock-top"><div class="mock-dots"><i></i><i></i><i></i></div><span style="font-size:12.5px;color:var(--text-muted);font-weight:600;">Abril 2026</span></div>
-      <div class="cal-grid">
-        <div class="cal-cell olive">Reunión<br>UTP</div>
-        <div class="cal-cell sun">Acompaña-<br>miento 4°A</div>
-        <div class="cal-cell">Aseo de<br>profesores</div>
-        <div class="cal-cell coral">Revisión<br>resultados</div>
-        <div class="cal-cell">Consejo<br>de curso</div>
-        <div class="cal-cell">Revisión<br>planificaciones</div>
-        <div class="cal-cell sky">Reunión<br>PIE</div>
-        <div class="cal-cell"></div>
-        <div class="cal-cell"></div>
-        <div class="cal-cell"></div>
-      </div>
-    </div>
-  </div>
-</article>
-
-<article class="product" id="comprension-lectora">
-  <div class="wrap">
-    <div class="p-copy">
-      <span class="p-tag" style="background:var(--sky);">COMPRENSIÓN LECTORA</span>
-      <h3>Comprensión y velocidad lectora en un solo lugar</h3>
-      <p class="p-desc">Registra, analiza y visualiza el progreso de comprensión y velocidad lectora de cada estudiante y curso, medición tras medición.</p>
-      <div class="chip-row">
-        <span class="chip">Velocidad</span>
-        <span class="chip">Precisión</span>
-        <span class="chip">Comprensión</span>
-        <span class="chip">Informes</span>
-      </div>
-      <p class="p-note">El avance lector, visible curso a curso.</p>
-    </div>
-    <div class="mock">
-      <div class="mock-top"><div class="mock-dots"><i></i><i></i><i></i></div><span style="font-size:12.5px;color:var(--text-muted);font-weight:600;">4° Básico</span></div>
-      <div class="trend-row">
-        <div class="mock-stat">86<small>palabras por minuto</small></div>
-        <span class="trend-badge">+ 32%</span>
-      </div>
-      <div class="sparkline">
-        <i style="height:30%;"></i><i style="height:40%;"></i><i style="height:52%;"></i>
-        <i style="height:48%;"></i><i style="height:68%;"></i><i style="height:80%;"></i>
-      </div>
-    </div>
-  </div>
-</article>
-
-<article class="product" id="aula-check">
-  <div class="wrap">
-    <div class="p-copy">
-      <span class="p-tag" style="background:var(--olive);">AULA CHECK</span>
-      <h3>Acompaña con evidencia</h3>
-      <p class="p-desc">Registra observaciones de aula desde el celular o tablet y genera informes de acompañamiento de forma automática.</p>
-      <div class="chip-row">
-        <span class="chip">Pauta digital</span>
-        <span class="chip">Informe automático</span>
-        <span class="chip">Seguimiento</span>
-      </div>
-      <p class="p-note">Acompañamiento con registro, no solo con impresión.</p>
-    </div>
-    <div class="mock">
-      <div class="mock-top"><div class="mock-dots"><i></i><i></i><i></i></div><span style="font-size:12.5px;color:var(--text-muted);font-weight:600;">Pauta de observación</span></div>
-      <div class="check-list">
-        <div class="check-item"><span class="check-box done">✓</span> Inicio de la clase</div>
-        <div class="check-item"><span class="check-box done">✓</span> Desarrollo</div>
-        <div class="check-item"><span class="check-box done">✓</span> Participación estudiantil</div>
-        <div class="check-item"><span class="check-box pending"></span> Uso del tiempo</div>
-        <div class="check-item"><span class="check-box pending"></span> Cierre</div>
-        <div class="check-item"><span class="check-box pending"></span> Retroalimentación</div>
-      </div>
-    </div>
-  </div>
-</article>
-
-<article class="product" id="evalua">
-  <div class="wrap">
-    <div class="p-copy">
-      <span class="p-tag" style="background:var(--coral);">EVALÚA</span>
-      <h3>¿Cuánto tiempo pierdes corrigiendo evaluaciones?</h3>
-      <p class="p-desc">Corrección automática de instrumentos, cálculo de notas y análisis de resultados por pregunta y por Objetivo de Aprendizaje, en minutos.</p>
-      <div class="chip-row">
-        <span class="chip">Corrección automática</span>
-        <span class="chip">Cálculo de notas</span>
-        <span class="chip">Análisis por pregunta</span>
-        <span class="chip">Resultados por OA</span>
-      </div>
-      <p class="p-note">Menos tiempo corrigiendo. Más tiempo enseñando.</p>
-    </div>
-    <div class="mock">
-      <div class="mock-top"><div class="mock-dots"><i></i><i></i><i></i></div><span style="font-size:12.5px;color:var(--text-muted);font-weight:600;">Resultados por pregunta</span></div>
-      <div class="bars">
-        <i style="height:55%;"></i><i style="height:82%;" class="hi"></i><i style="height:40%;"></i>
-        <i style="height:68%;"></i><i style="height:30%;" class="hi"></i><i style="height:74%;"></i>
-        <i style="height:90%;"></i>
-      </div>
-      <div style="margin-top:16px;" class="mock-stat">78%<small>Logro promedio del curso</small></div>
-    </div>
-  </div>
-</article>
-
-<article class="product" id="integracion">
-  <div class="wrap">
-    <div class="p-copy">
-      <span class="p-tag" style="background:var(--lila);">INTEGRACIÓN</span>
-      <h3>Confecciona PACI sin complicaciones</h3>
-      <p class="p-desc">Crea, actualiza y respalda los Planes de Adecuación Curricular Individual de tus estudiantes PIE de forma guiada y ordenada, alineada al Decreto N°83.</p>
-      <div class="chip-row">
-        <span class="chip">PACI guiado</span>
-        <span class="chip">Decreto N°83</span>
-        <span class="chip">Historial por estudiante</span>
-        <span class="chip">Exporta a PDF</span>
-      </div>
-      <p class="p-note">Menos formularios sueltos. Más trazabilidad para el equipo de integración.</p>
-    </div>
-    <div class="mock">
-      <div class="mock-top"><div class="mock-dots"><i></i><i></i><i></i></div><span style="font-size:12.5px;color:var(--text-muted);font-weight:600;">Ficha PACI</span></div>
-      <div class="paci-field"><span>Estudiante</span><strong>Emilia Torres</strong></div>
-      <div class="paci-field"><span>Curso</span><strong>4° Básico A</strong></div>
-      <div class="check-list" style="margin-top:14px;">
-        <div class="check-item"><span class="check-box done">✓</span> Adecuación de acceso</div>
-        <div class="check-item"><span class="check-box done">✓</span> Objetivos de aprendizaje</div>
-        <div class="check-item"><span class="check-box done">✓</span> Evaluación diferenciada</div>
-        <div class="check-item"><span class="check-box pending"></span> Promoción</div>
-      </div>
-      <div style="margin-top:18px;">
-        <div class="progress-bar"><i style="width:75%;background:var(--lila);"></i></div>
-        <span style="font-size:12.5px;font-weight:600;color:var(--text-muted);">75% completado</span>
-      </div>
-    </div>
-  </div>
-</article>
 
 <div class="trust">
   <div class="wrap" style="padding:44px 0;">
@@ -627,7 +511,7 @@
     <div class="section-head">
       <span class="gift-tag">REGALO · GRATIS</span>
       <h2>Un regalo para partir</h2>
-      <p>Antes de conversar sobre tu establecimiento, quiero regalarte una versión simplificada de UTP360 Evalúa: una calculadora de notas que te enviamos directo a tu correo. Es el primero de varios regalos que iremos sumando.</p>
+      <p>Antes de conversar sobre tu establecimiento, quiero regalarte una calculadora de notas que te enviamos directo a tu correo. Es el primero de varios regalos que iremos sumando.</p>
     </div>
     <div class="gift-card">
       <form id="giftForm">
@@ -699,11 +583,11 @@
         <img class="logo-img" src="logo.png" alt="UTP360">
       </a>
       <div class="foot-links">
-        <a href="#herramientas">Herramientas</a>
+        <a href="#productos">Productos</a>
         <a href="#regalo">Regalo</a>
         <a href="#nosotros">Nosotros</a>
         <a href="#contacto">Contacto</a>
-        <a href="acceso.html">Ingresar a la plataforma</a>
+        <a href="acceso.html">Plataforma</a>
         <a href="mailto:contacto@utp360.cl">contacto@utp360.cl</a>
       </div>
     </div>
