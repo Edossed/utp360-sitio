@@ -35,6 +35,7 @@
   a{color:inherit;text-decoration:none;}
   img{max-width:100%;display:block;}
   .wrap{max-width:720px;margin:0 auto;padding:0 24px;}
+  #panelVista .wrap{max-width:980px;}
 
   header{padding:22px 0;border-bottom:1px solid var(--border);}
   .header-row{max-width:1160px;margin:0 auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;}
@@ -120,12 +121,16 @@
   .seats{margin-top:14px;font-size:13.5px;color:var(--text-muted);}
   .seats strong{color:var(--text);}
   .tools-title{font-family:'Montserrat';font-weight:800;font-size:17px;margin:26px 0 12px;}
-  .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+  .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
   .tool{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--paper);display:flex;flex-direction:column;gap:12px;}
   .tool .p-tag{margin-bottom:0;align-self:flex-start;}
   .tool .tool-state{font-size:13px;color:var(--text-muted);font-weight:600;}
+  .tool .tool-state.on{color:#1d7a3a;}
+  .tool-desc{font-size:13.5px;color:var(--text-muted);line-height:1.45;flex:1;}
+  .tools-sub{margin:-6px 0 14px;color:var(--text-muted);font-size:14.5px;}
   .tool-open{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:100px;font-weight:700;font-size:14px;background:var(--ink);color:var(--paper);transition:background .15s;}
   .tool-open:hover{background:var(--olive-dark);}
+  .tool-open{box-sizing:border-box;min-height:42px;line-height:1.2;text-align:center;}
   .tool.locked{opacity:.62;border-style:dashed;}
   .tool.locked .tool-open{background:transparent;color:var(--text-muted);border:1px solid var(--border);}
 
@@ -328,6 +333,18 @@
     return `${base}${sep}c=${encodeURIComponent(codigo || '')}`;
   }
 
+  const DESCRIPCIONES = {
+    'planificador': 'Calendario compartido de reuniones, acompañamientos, revisiones de planificación y consejos de resultados.',
+    'comprensión lectora': 'Registro y análisis de comprensión y velocidad lectora por estudiante y curso.',
+    'comprension lectora': 'Registro y análisis de comprensión y velocidad lectora por estudiante y curso.',
+    'aula check': 'Observaciones de aula desde el celular o tablet, con informes de acompañamiento automáticos.',
+    'evalúa': 'Corrección automática, notas y análisis de resultados por pregunta y por Objetivo de Aprendizaje.',
+    'evalua': 'Corrección automática, notas y análisis de resultados por pregunta y por Objetivo de Aprendizaje.',
+    'integración': 'Planes de Adecuación Curricular Individual (PACI) guiados y respaldados, alineados al Decreto N°83.',
+    'integracion': 'Planes de Adecuación Curricular Individual (PACI) guiados y respaldados, alineados al Decreto N°83.'
+  };
+  function descripcion(p){ return DESCRIPCIONES[(p || '').trim().toLowerCase()] || ''; }
+
   function renderSuccess(data){
     const dias = data.diasRestantes;
     let badgeClass = 'ok', badgeText = `${dias} días restantes`;
@@ -346,13 +363,15 @@
     const card = (p, activo) => `
       <div class="tool ${activo ? '' : 'locked'}">
         <span class="p-tag" style="background:${tagColor(p.producto)};">${escapeHtml(p.producto.toUpperCase())}</span>
-        <span class="tool-state">${activo ? 'Incluida en tu cuenta' : 'No contratada'}</span>
+        <p class="tool-desc">${escapeHtml(descripcion(p.producto))}</p>
+        <span class="tool-state ${activo ? 'on' : ''}">${activo ? '● Activa en tu cuenta' : 'No incluida en tu contrato'}</span>
         ${activo && p.propio
-          ? `<button type="button" class="tool-open" data-sso="${escapeHtml(p.producto)}" data-enlace="${escapeHtml(p.enlace)}" style="border:none;cursor:pointer;font-family:inherit;">Abrir herramienta</button>`
+          ? `<button type="button" class="tool-open" data-sso="${escapeHtml(p.producto)}" data-enlace="${escapeHtml(p.enlace)}" style="border:none;cursor:pointer;font-family:inherit;">Abrir ${escapeHtml(p.producto)}</button>`
           : activo
-          ? `<a class="tool-open" href="${escapeHtml(enlaceHerramienta(p, data._codigo))}" target="_blank" rel="noopener">Abrir herramienta</a>`
-          : `<a class="tool-open" href="mailto:contacto@utp360.cl?subject=${encodeURIComponent('Quiero contratar ' + p.producto)}">Consultar</a>`}
+          ? `<a class="tool-open" href="${escapeHtml(enlaceHerramienta(p, data._codigo))}" target="_blank" rel="noopener">Abrir ${escapeHtml(p.producto)}</a>`
+          : `<a class="tool-open" href="mailto:contacto@utp360.cl?subject=${encodeURIComponent('Quiero contratar ' + p.producto)}">Quiero contratarla</a>`}
       </div>`;
+    const catalogo = contratados.concat(noContratados);
 
     resultBox.className = 'show';
     resultBox.innerHTML = `
@@ -370,9 +389,9 @@
           <div><span>Vence</span><strong>${escapeHtml(data.fechaFin || '—')}</strong></div>
         </div>
         ${cupos}
-        <p class="tools-title">Tus herramientas</p>
-        <div class="tools-grid">${contratados.map(p => card(p, true)).join('') || '<p class="error-desc">Tu cuenta aún no tiene herramientas asignadas.</p>'}</div>
-        ${noContratados.length ? `<p class="tools-title">Otras herramientas UTP360</p><div class="tools-grid">${noContratados.map(p => card(p, false)).join('')}</div>` : ''}
+        <p class="tools-title">Herramientas UTP360</p>
+        <p class="tools-sub">${contratados.length === productos.length ? 'Tu contrato incluye toda la suite. Elige con cuál quieres trabajar.' : `Tienes <strong>${contratados.length} de ${productos.length}</strong> herramientas activas. Las demás se habilitan al contratarlas.`}</p>
+        <div class="tools-grid">${catalogo.map(p => card(p, contratados.indexOf(p) !== -1)).join('')}</div>
       </div>`;
     resultBox.querySelectorAll('[data-sso]').forEach(btn => {
       btn.addEventListener('click', () => abrirConIngresoUnico(btn, data._codigo));
