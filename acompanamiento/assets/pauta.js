@@ -355,6 +355,7 @@
 
   /* ---------- Inicio ---------- */
   async function init() {
+    await (window.UTP360_LISTO || Promise.resolve()); // espera el ingreso único de la plataforma UTP360
     renderRubrica(); enlazarFormulario();
     const compacto = A.store.get(K.compacto, false);
     $("compacto").checked = compacto; document.body.classList.toggle("compact", compacto);

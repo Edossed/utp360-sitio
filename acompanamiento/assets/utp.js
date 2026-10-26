@@ -370,7 +370,7 @@
   }
 
   function init() {
-    initTip(); initLogin();
+    initTip(); (window.UTP360_LISTO || Promise.resolve()).then(initLogin);
     document.querySelector(".tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) { tab = b.dataset.tab; render(); } });
     $("vista").addEventListener("click", e => { const b = e.target.closest("[data-doc]"); if (b) verInforme(informeIndividual(filtradas(), b.dataset.doc)); });
     $("btnCSV").onclick = exportarCSV;
