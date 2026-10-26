@@ -122,6 +122,23 @@
     }
   } catch (e) {}
 
+  // Las herramientas que necesitan esperar el ingreso único pueden usar: await window.UTP360_LISTO
+  var liberarListo;
+  window.UTP360_LISTO = new Promise(function (r) { liberarListo = r; });
+
+  // Ingreso único a Acompañamiento al Aula: deja el pase listo para que la herramienta no pida claves.
+  function prepararAula() {
+    if (clave(PRODUCTO) !== 'aula check') return Promise.resolve();
+    return llamarAppsScript({ codigo: codigo, accion: 'token_aula' }).then(function (r) {
+      if (!r || !r.valid) return;
+      try { localStorage.setItem('pauta.codigo', JSON.stringify(r.token)); } catch (e) {}
+      try {
+        if (r.utp) sessionStorage.setItem('utp.clave', r.token);
+        else sessionStorage.removeItem('utp.clave');
+      } catch (e) {}
+    }).catch(function () {});
+  }
+
   window.UTP360 = {
     codigo: codigo,
     nombre: '',
@@ -140,6 +157,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     if (!codigo) {
+      liberarListo();
       bloquear('Acceso restringido', 'Entra primero a la plataforma UTP360 con tu correo y tu clave, y abre la herramienta desde tu panel.');
       return;
     }
@@ -148,6 +166,7 @@
       .then(function (resp) {
         quitarCargando();
         if (!resp.valid) {
+          liberarListo();
           var mensajes = {
             no_encontrado: 'No encontramos ese código de acceso.',
             vencido: 'El período contratado de tu cuenta venció.',
@@ -161,6 +180,7 @@
           return p.contratado && clave(p.producto) === prodEsperado;
         });
         if (!tiene) {
+          liberarListo();
           bloquear('Sin acceso a esta herramienta', 'Tu usuario no tiene habilitada esta herramienta. Si crees que es un error, escribe a contacto@utp360.cl.');
           return;
         }
@@ -169,9 +189,11 @@
         window.UTP360.nombre = resp.nombre;
         window.UTP360.diasRestantes = resp.diasRestantes;
         document.dispatchEvent(new CustomEvent('utp360:acceso-ok', { detail: resp }));
+        return prepararAula().then(liberarListo);
       })
       .catch(function () {
         quitarCargando();
+        liberarListo();
         bloquear('No pudimos verificar tu acceso', 'Hubo un problema de conexión. Recarga la página o inténtalo más tarde.');
       });
   });
